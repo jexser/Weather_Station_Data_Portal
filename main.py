@@ -3,6 +3,7 @@ import pandas as pd
 from dataclasses import dataclass
 import re
 import datetime
+import os
 
 app = Flask("__name__")
                             
@@ -54,9 +55,18 @@ def get_station_by(stationid):
     year_str = request.args.get("year")
     date_str = request.args.get("date")
     
+    if not re.match(r"^\d{1,4}$", stationid): # error handling for invalid station id format
+        return jsonify({"error": "Invalid station ID format. Please provide a valid station ID."}), 400
+
     file_path = "data_small\\TG_STAID" + str(stationid).zfill(6) + ".txt"
+    if not os.path.exists(path=file_path): # Check if the file exists, will raise an error if it doesn't
+        return jsonify({"error": "Station data not found."}), 404
+
     df = load_and_clean_data(file_path=file_path, rows_to_skip=20, parse_dates=True)
 
+    if date_str and year_str:
+        return jsonify({"error": "Please provide only one query parameter: either 'year' or 'date', not both."}), 400
+    
     if date_str:
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str): # error handling for invalid date format
             return jsonify({"error": "Invalid date format. Please provide a date in the format YYYY-MM-DD."}), 400
@@ -65,17 +75,24 @@ def get_station_by(stationid):
         except ValueError:
             return jsonify({"error": "Invalid date. Please provide a valid calendar date in the format YYYY-MM-DD."}), 400
         
-        temperature = df.loc[df[Fields.field_DATE] == date_str][Fields.field_TG].squeeze()
+        temperature_series = df.loc[df[Fields.field_DATE] == date_str][Fields.field_TG].squeeze()
+        try:
+            temperature = float(temperature_series) # type: ignore
+            if pd.isna(temperature):
+                raise ValueError("Empty data")
+        except (ValueError, TypeError):
+            return jsonify({"error": "No temperature data found."}), 404
+
         return jsonify({
-                    "stationid": stationid,
-                    "date": date_str, 
-                    "temperature": temperature
-                })
+            "stationid": stationid,
+            "date": date_str, 
+            "temperature": temperature
+        })
     elif year_str:
         if not re.match(r"^\d{4}$", year_str): # error handling for invalid year format
             return jsonify({"error": "Invalid year format. Please provide a 4-digit year."}), 400
         result = df.loc[df[Fields.field_DATE].dt.year == int(year_str)].to_dict(orient="records")
-        return jsonify(result)
+        return jsonify(result) #if no data, it will return an empty list, which is appropriate for this case
 
     return jsonify({"error": "Please provide either a 'year' or 'date' query parameter."}), 400
 
