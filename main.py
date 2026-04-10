@@ -34,7 +34,8 @@ def load_and_clean_data(
         skiprows=rows_to_skip
         )
     df.columns = df.columns.str.strip() # Remove leading/trailing whitespace from column names
-    df[Fields.field_TG] = df[Fields.field_TG] / 10 # Convert temperature from tenths of degrees to degrees Celsius
+    if Fields.field_TG in df.columns:
+        df[Fields.field_TG] = df[Fields.field_TG] / 10 # Convert temperature from tenths of degrees to degrees Celsius
     if parse_dates:
         df[Fields.field_DATE] = pd.to_datetime(df[Fields.field_DATE], format="%Y%m%d", errors='coerce') # type: ignore
 
