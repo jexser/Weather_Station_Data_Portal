@@ -5,8 +5,17 @@
 </head>
 <body>
     <h1>Weather Data API</h1>
-    <p>URL formal: http://127.0.0.1:5000/api/v1/stationid/date</p>
-    <p>Example: http://127.0.0.1:5000/api/v1/10/1988-10-25</p>
+    </p>
+        <p>URL formal: http://127.0.0.1:5000/api/v1/station/{stationid}</p>
+        <p>Example: http://127.0.0.1:5000/api/v1/station/10</p>
+    </p>
+    <p>
+        <p>URL formal: http://127.0.0.1:5000/api/v1/station/{stationid}?date={date}</p>
+        <p>Example: http://127.0.0.1:5000/api/v1/station/10?date=2005-10-10</p>
+    </p>
+    <p>
+        <p>URL formal: http://127.0.0.1:5000/api/v1/station/{stationid}?year={year}</p>
+        <p>Example: http://127.0.0.1:5000/api/v1/station/10?year=2005</p>
     <p>{{data|safe}}</p>
 </body>
 </html>
