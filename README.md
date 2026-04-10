@@ -1,42 +1,36 @@
 # Weather Station Data Portal
 
-A Flask-based web application and RESTful API designed to provide access to historical temperature data from various weather stations stored in flat-file format.
+A Flask-based web application and RESTful API designed to provide access to historical temperature records from various weather stations stored in a distributed flat-file system.
 
 ## 🚀 Overview
 
 This project serves two primary purposes:
-1.  **Web Portal**: A user-friendly interface to browse a list of available weather stations.
-2.  **RESTful API**: A programmatic way to query specific temperature records for a given station on a specific date.
+1.  **Web Portal**: A user-friendly interface to browse a list of available weather stations via an HTML dashboard.
+2.  **RESTful API**: A programmatic way to query specific temperature records using station IDs and optional filters (year or date).
 
-The application reads directly from a local data directory (`data_small/`), making it highly efficient for serving pre-processed historical datasets without the need for a heavy database engine.
+The application is optimized for high-performance reads from local text files, performing real-time data cleaning and transformation.
 
 ## 📂 Project Structure
 
 ```text
 .
-├── main.py              # Flask application logic and API endpoints
+├── main.py              # Flask application logic, API routing, and data processing
 ├── README.md            # Project documentation
-├── data_small/          # Data repository
-│   ├── stations.txt     # Master list of weather stations (ID and Name)
+├── data_small/          # Data repository (Flat-file storage)
+│   ├── stations.txt     # Master list of weather stations (Metadata)
 │   └── TG_STAIDXXXXXX.txt # Individual temperature record files per station
 ├── templates/           # HTML templates
 │   └── home.html       # Main dashboard view
 └── static/              # Static assets (CSS, JS, Images)
 ```
 
-## 🛠️ Technical Stack
-
-*   **Language**: Python 3.x
-*   **Web Framework**: [Flask](https://flask.palletsprojects.com/)
-*   **Data Processing**: [Pandas](https://pandas.pydata.org/)
-*   **Templating Engine**: Jinja2
-
 ## ⚙️ How It Works
 
-### Data Storage Format
-The system relies on a structured flat-file architecture:
-*   **Stations Metadata**: `stations.txt` contains the registry of all stations.
-*   **Temperature Records**: Each station has its own file (e.g., `TG_STAID000001.txt`). These files contain time-series data where temperature values are stored as integers (multiplied by 10) to maintain precision without floating-point issues in text format.
+### Data Processing Pipeline
+The application uses a robust loading mechanism (`load_and_clean_data`) to handle the complexities of raw text files:
+*   **Whitespace Stripping**: Automatically removes leading/trailing whitespace from all column headers to prevent `KeyError` during parsing.
+*   **Temperature Scaling**: Converts temperature values from tenths of degrees (stored in text) to standard Celsius (floating point).
+*   **Date Parsing**: Transforms raw date strings into Python `datetime` objects for accurate filtering and comparison.
 
 ### Web Interface
 When accessing the root URL (`/`):
@@ -46,28 +40,46 @@ When accessing the root URL (`/`):
 
 ### API Endpoints
 
-#### Get Temperature by Station and Date
-Retrieves the temperature for a specific station on a requested date.
+#### Get Station Data
+Retrieves temperature records for a specific station, optionally filtered by year or date.
 
-**Endpoint:** `GET /api/v1/<stationid>/<date>`
+**Endpoint:** `GET /api/v1/station/<stationid>`
 
-**Parameters:**
+**Path Parameters:**
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `stationid` | string | The 6-digit zero-padded station ID (e.g., `000001`) |
-| `date` | string | The date in `YYYY-MM-DD` format |
 
-**Example Request:**
-`GET /api/v1/000001/2023-01-01`
+**Query Parameters (Optional):**
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `date` | string | A specific date in `YYYY-MM-DD` format. Returns a single temperature value. |
+| `year` | string | A 4-digit year (e.g., `2023`). Returns all records for that year. |
 
-**Example Response (JSON):**
+**Example Requests:**
+*   `GET /api/v1/station/000001?date=2023-05-20` $\rightarrow$ Returns temperature for that day.
+*   `GET /api/v1/station/000001?year=2023` $\rightarrow$ Returns all records for 2023.
+
+**Example JSON Response (Date Lookup):**
 ```json
 {
   "stationid": "000001",
-  "date": "2023-01-01",
-  "temperature": 12.5
+  "date": "202            ", 
+  "temperature": 15.2
 }
 ```
+
+### Error Handling
+The API implements a multi-layered error handling strategy:
+*   **`400 Bad Request`**: Returned for invalid station ID formats, malformed date strings (e.g., `2023-13-45`), or providing both `year` and `date` simultaneously.
+*   **`404 Not Found`**: Returned if the requested station file does not exist on the server, or if a valid date/year was requested but contains no recorded data.
+
+## 🛠️ Technical Stack
+
+*   **Language**: Python 3.x
+*   **Web Framework**: [Flask](https://flask.palletsprojects.com/)
+*   **Data Processing**: [Pandas](https://pandas.pydata.org/)
+*   **Templating Engine**: Jinja2
 
 ## 🚀 Getting Started
 
@@ -90,7 +102,4 @@ Run the main script:
 python main.py
 ```
 The application will start a development server at `http://127.0.0.1:5000`.
-
-## 📝 Note on Data Parsing
-The application uses a `Fields` dataclass to handle inconsistent column naming in the raw text files (e.g., handling extra whitespace in headers like `"    DATE"`). It also performs automatic scaling, dividing temperature values by 10 during retrieval to return standard Celsius values.
 ```
