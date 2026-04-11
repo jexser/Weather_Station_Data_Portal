@@ -5,6 +5,7 @@ import re
 import datetime
 import os
 from functools import lru_cache
+from errors import APIError, BadRequest, NotFound, InternalServerError
 
 app = Flask("__name__")
 
@@ -45,9 +46,25 @@ def load_and_clean_data(
     return df
 
 
+def jsonify_error(error: APIError):
+    """
+    Helper function to create a JSON response for errors.
+    Arguments:
+    error (APIError): The error object containing the message and status code.
+    Returns:
+    A JSON response with the error message and appropriate HTTP status code.
+    """
+    response = jsonify({"error": error.message})
+    response.status_code = error.status_code
+    return response
+
+
 @app.route("/")
 def home():
-    stations = load_and_clean_data("data_small\\stations.txt", rows_to_skip=17, parse_dates=False)
+    path = os.path.join("data_small", "stations.txt")
+    if not os.path.exists(path=path): # Check if the file exists, will raise an error if it doesn't
+        return jsonify_error(InternalServerError("Stations index data not found."))
+    stations = load_and_clean_data(path, rows_to_skip=17, parse_dates=False)
     stations = stations[[Fields.field_STAID, Fields.field_STANAME]]
     return render_template("home.html", data=stations.to_html())
 
