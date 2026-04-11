@@ -27,7 +27,7 @@ def home():
         return jsonify_error(InternalServerError("Stations index data not found."))
     stations = load_and_clean_data(path, rows_to_skip=17, parse_dates=False)
     stations = stations[[Fields.field_STAID, Fields.field_STANAME]]
-    return render_template("home.html", data=stations.to_html())
+    return render_template("home.html", data=stations.to_dict(orient="records"))
 
 
 @app.route("/api/v1/station/<stationid>")
