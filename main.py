@@ -57,17 +57,17 @@ def get_station_by(stationid):
     year_str = request.args.get("year")
     date_str = request.args.get("date")
     
-    if not re.match(r"^\d{1,4}$", stationid): # error handling for invalid station id format
+    if not re.match(r"^\d{1,6}$", stationid): # error handling for invalid station id format
         return jsonify({"error": "Invalid station ID format. Please provide a valid station ID."}), 400
-
-    file_path = "data_small\\TG_STAID" + str(stationid).zfill(6) + ".txt"
+    
+    file_path = os.path.join("data_small", f"TG_STAID{str(stationid).zfill(6)}.txt")
     if not os.path.exists(path=file_path): # Check if the file exists, will raise an error if it doesn't
         return jsonify({"error": "Station data not found."}), 404
-
-    df = load_and_clean_data(file_path=file_path, rows_to_skip=20, parse_dates=True)
-
+    
     if date_str and year_str:
         return jsonify({"error": "Please provide only one query parameter: either 'year' or 'date', not both."}), 400
+
+    df = load_and_clean_data(file_path=file_path, rows_to_skip=20, parse_dates=True)
     
     if date_str:
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str): # error handling for invalid date format
