@@ -4,9 +4,10 @@ from dataclasses import dataclass
 import re
 import datetime
 import os
+from functools import lru_cache
 
 app = Flask("__name__")
-                            
+
 
 @dataclass 
 class Fields():
@@ -19,6 +20,7 @@ class Fields():
     field_STANAME: str = "STANAME"
 
 
+@lru_cache(maxsize=32) # Cache results to improve performance for repeated requests
 def load_and_clean_data(
         file_path: str, 
         rows_to_skip: int = 0, 
