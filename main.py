@@ -29,7 +29,7 @@ logging.basicConfig(
 )
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-app = Flask("__name__")
+app = Flask(__name__)
 
 @dataclass 
 class Fields():
@@ -80,13 +80,13 @@ def get_station_by(stationid):
                 "date": date_str, 
                 "temperature": temperature
             })
-        elif year_str:
+        if year_str:
             validate_year_format(year_str)
             result = df.loc[df[Fields.field_DATE].dt.year == int(year_str)].to_dict(orient="records")
             return jsonify(result) #if no data, it will return an empty list, which is appropriate for this case
-        else:
-            logging.warning("No valid query parameters provided: %s", request.args)
-            raise BadRequest("Please provide a query parameter: either 'year' or 'date'.")
+        
+        logging.warning("No valid query parameters provided: %s", request.args)
+        raise BadRequest("Please provide a query parameter: either 'year' or 'date'.")
     except APIError as error:
         return jsonify_error(error)
 
@@ -114,11 +114,10 @@ def load_and_clean_data(
         )
     df.columns = df.columns.str.strip() # Remove leading/trailing whitespace from column names
     if Fields.field_TG in df.columns:
+        df[Fields.field_TG] = df[Fields.field_TG].replace(-9999, pd.NA) # Replace -9999 with NaN for better handling of missing data
         df[Fields.field_TG] = df[Fields.field_TG] / 10 # Convert temperature from tenths of degrees to degrees Celsius
     if parse_dates:
         df[Fields.field_DATE] = pd.to_datetime(df[Fields.field_DATE], format="%Y%m%d", errors='coerce') # type: ignore
-    # TODO: need filtering and validation for cases where TG = -9999 (missing data)
-
     return df
 
 
