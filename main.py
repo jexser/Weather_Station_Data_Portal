@@ -48,7 +48,8 @@ def get_station_by(stationid):
     try:
         if date_str:
             validate_date_format(date_str)
-            temperature_series = df.loc[df[Fields.field_DATE] == date_str][Fields.field_TG].squeeze()
+            parsed_date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+            temperature_series = df.loc[df[Fields.field_DATE] == parsed_date][Fields.field_TG].squeeze()
             temperature = validate_temperature_data(temperature_series)
 
             return jsonify({
@@ -105,7 +106,13 @@ def jsonify_error(error: APIError):
     Returns:
         A JSON response with the error message and appropriate HTTP status code.
     """
-    response = jsonify({"error": error.message})
+
+    response = jsonify({
+        "error": {
+            "status_code": error.status_code,
+            "message": error.message
+        }
+    })
     response.status_code = error.status_code
     return response
 
