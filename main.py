@@ -6,6 +6,28 @@ import datetime
 import os
 from functools import lru_cache
 from errors import APIError, BadRequest, NotFound, InternalServerError
+import logging
+from logging.handlers import RotatingFileHandler
+from typing import Final
+from dotenv import load_dotenv
+
+load_dotenv() # Load environment variables from .env file
+DEBUG: Final[bool] = str(os.getenv("Debug")).lower() == "true"
+LOG_FILE_LOCATION: Final[str] = os.path.join("logs", "app_logs.log")
+
+# Logs
+LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+handler = RotatingFileHandler(
+    LOG_FILE_LOCATION,
+    maxBytes=1_048_576,  # 1 MiB
+    backupCount=3
+)
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format="%(asctime)s [%(levelname)s]: %(message)s",
+    handlers=[handler, logging.StreamHandler()]
+)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 app = Flask("__name__")
 
@@ -22,10 +44,11 @@ class Fields():
 
 @app.route("/")
 def home():
-    path = os.path.join("data_small", "stations.txt")
-    if not os.path.exists(path=path): # Check if the file exists, will raise an error if it doesn't
+    index_file_path = os.path.join("data_small", "stations.txt")
+    if not os.path.exists(path=index_file_path):
+        logging.critical(f"Stations index file not found at path: {index_file_path}")
         return jsonify_error(InternalServerError("Stations index data not found."))
-    stations = load_and_clean_data(path, rows_to_skip=17, parse_dates=False)
+    stations = load_and_clean_data(index_file_path, rows_to_skip=17, parse_dates=False)
     stations = stations[[Fields.field_STAID, Fields.field_STANAME]]
     return render_template("home.html", data=stations.to_dict(orient="records"))
 
@@ -62,6 +85,7 @@ def get_station_by(stationid):
             result = df.loc[df[Fields.field_DATE].dt.year == int(year_str)].to_dict(orient="records")
             return jsonify(result) #if no data, it will return an empty list, which is appropriate for this case
         else:
+            logging.warning("No valid query parameters provided: %s", request.args)
             raise BadRequest("Please provide a query parameter: either 'year' or 'date'.")
     except APIError as error:
         return jsonify_error(error)
@@ -126,6 +150,7 @@ def validate_station_id(stationid: str) -> APIError | None:
         BadRequest: If the station ID format is invalid.
     """
     if not re.match(r"^\d{1,6}$", stationid):
+        logging.warning(f"Invalid station ID format: {stationid}")
         raise BadRequest("Invalid station ID format. Please provide a valid station ID.")
 
 
@@ -138,6 +163,7 @@ def validate_file_existence(file_path: str) -> APIError | None:
         NotFound: If the file does not exist.
     """
     if not os.path.exists(path=file_path):
+        logging.warning(f"File not found at path: {file_path}")
         raise NotFound("Station data not found.")
 
 
@@ -150,6 +176,7 @@ def validate_request_args(args: dict) -> APIError | None:
         BadRequest: If both 'year' and 'date' are provided, or if neither is provided.
     """
     if ("year" in args) and ("date" in args):
+        logging.warning("Both 'year' and 'date' query parameters provided: %s", args)
         raise BadRequest("Please provide only one query parameter: either 'year' or 'date', not both.")
 
 
@@ -164,6 +191,7 @@ def validate_date_format(date_str: str) -> APIError | None:
     try:
         datetime.datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
+        logging.warning(f"Invalid date format: {date_str}")
         raise BadRequest("Invalid date. Please provide a valid calendar date in the format YYYY-MM-DD.")
 
 
@@ -176,6 +204,7 @@ def validate_year_format(year_str: str) -> APIError | None:
         BadRequest: If the year format is invalid.
     """
     if not re.match(r"^\d{4}$", year_str):
+        logging.warning(f"Invalid year format: {year_str}")
         raise BadRequest("Invalid year format. Please provide a 4-digit year.")
 
 
@@ -192,11 +221,13 @@ def validate_temperature_data(temperature_series) -> APIError | float | None:
     try:
         temperature = float(temperature_series)
         if pd.isna(temperature):
+            logging.warning("Temperature data is NaN.")
             raise ValueError("Empty data")
         return temperature
     except (ValueError, TypeError):
+        logging.warning(f"Invalid temperature data: {temperature_series}")
         raise BadRequest("No temperature data found.")
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True if DEBUG else False)
