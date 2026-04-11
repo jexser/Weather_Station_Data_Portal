@@ -14,14 +14,20 @@ The application is optimized for high-performance reads from local text files, p
 
 ```text
 .
-├── main.py              # Flask application logic, API routing, and data processing
-├── README.md            # Project documentation
-├── data_small/          # Data repository (Flat-file storage)
-│   ├── stations.txt     # Master list of weather stations (Metadata)
+├── .github/              # GitHub configuration and agents
+├── .gitignore            # Git ignore rules
+├── data_small/           # Data repository (Flat-file storage)
+│   ├── .ipynb_checkpoints/
+│   ├── stations.txt      # Master list of weather stations (Metadata)
 │   └── TG_STAIDXXXXXX.txt # Individual temperature record files per station
-├── templates/           # HTML templates
-│   └── home.html       # Main dashboard view
-└── static/              # Static assets (CSS, JS, Images)
+├── logs/                 # Application logs
+├── static/               # Static assets (CSS, JS, Images)
+├── templates/            # HTML templates
+│   └── home.html        # Main dashboard view
+├── .env                  # Environment variables
+├── errors.py             # Error handling utilities
+├── main.py               # Flask application logic, API routing, and data processing
+└── README.md             # Project documentation
 ```
 
 ## ⚙️ How It Works
@@ -64,15 +70,16 @@ Retrieves temperature records for a specific station, optionally filtered by yea
 ```json
 {
   "stationid": "000001",
-  "date": "202            ", 
+  "date": "2023-05-20", 
   "temperature": 15.2
 }
 ```
 
 ### Error Handling
-The API implements a multi-layered error handling strategy:
+The API implements a comprehensive error handling strategy:
 *   **`400 Bad Request`**: Returned for invalid station ID formats, malformed date strings (e.g., `2023-13-45`), or providing both `year` and `date` simultaneously.
 *   **`404 Not Found`**: Returned if the requested station file does not exist on the server, or if a valid date/year was requested but contains no recorded data.
+*   **`500 Internal Server Error`**: Returned for unexpected server-side errors.
 
 ## 🛠️ Technical Stack
 
@@ -100,6 +107,3 @@ The API implements a multi-layered error handling strategy:
 Run the main script:
 ```bash
 python main.py
-```
-The application will start a development server at `http://127.0.0.1:5000`.
-```
