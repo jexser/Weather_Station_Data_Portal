@@ -2,7 +2,7 @@
 
 A Flask-based web application and RESTful API designed to provide access to historical temperature records from various weather stations stored in a distributed flat-file system.
 
-## 🚀 Overview
+## Overview
 
 This project serves two primary purposes:
 1.  **Web Portal**: A user-friendly interface to browse a list of available weather stations via an HTML dashboard.
@@ -14,7 +14,6 @@ The application is optimized for high-performance reads from local text files, p
 
 ```text
 .
-├── .github/              # GitHub configuration and agents
 ├── .gitignore            # Git ignore rules
 ├── data_small/           # Data repository (Flat-file storage)
 │   ├── .ipynb_checkpoints/
