@@ -1,181 +1,154 @@
-# Weather API Project – Requirements v2.1
+# Weather API Project – Requirements v2.2
 
 ## 1. General Description
 
 A Flask-based web application and RESTful API designed to provide access to historical temperature records from various weather stations stored in a distributed flat-file system.
 
 The system consists of three main parts:
+- Web Portal (UI)
+- RESTful API
+- Data Storage Layer
 
 ---
 
 ## 1.1 Web Portal
 
-A lightweight web interface for browsing, querying, and visualizing weather data.
-
 ### 1.1.1 Home Page (`/`, `/home`)
-- Displays a table of available weather stations (ID + name)
-- Provides navigation to other pages
+- Displays stations with:
+  - Pagination (500 stations per page)
+  - Search by station name
+- Search returns matching stations (ID + name)
 
-**Mockup:**
-
-```
-+--------------------------------------------------+
-| Weather Data Portal                              |
-+--------------------------------------------------+
-| [Home] [Charts] [Insights] [Compare] [API Docs]   |
-+--------------------------------------------------+
-| Stations                                         |
-| ------------------------------------------------|
-| ID     | Name                                   |
-| 000001 | Vilnius                                |
-| 000002 | Kaunas                                 |
-| ...                                              |
-+--------------------------------------------------+
-```
+**API dependency:**
+- `/api/v1/stations?page=X`
+- `/api/v1/stations/search?name=...`
 
 ---
 
 ### 1.1.2 API Documentation (`/api`)
-- Lists endpoints with examples
-
-**Mockup:**
-
-```
-GET /api/v1/station/{id}?date=YYYY-MM-DD
-GET /api/v1/station/{id}?year=YYYY
-GET /api/v1/insights/{id}?type=...
-```
+- Lists endpoints and examples
 
 ---
 
 ### 1.1.3 Charts Page (`/charts`)
+
 User inputs:
-- Station dropdown
-- Chart type dropdown
-- Optional date input
+- Station
+- Chart type
+- Optional date
 
-Supported charts:
-- Yearly Trend (line)
-- Same Date Across Years (scatter)
-- Rolling Average (optional)
+Charts:
 
-**Mockup:**
+1. **Yearly Trend (restricted)**
+   - Average temperature per year
+   - Aggregated (1 point per year)
 
-```
-Station: [Vilnius ▼]
-Chart:   [Yearly Trend ▼]
-Date:    [YYYY-MM-DD]
-
-[ Load Chart ]
-
--------------------------------
-|        (Chart Area)         |
--------------------------------
-```
+2. **Same Date Across Years**
+   - Input: MM-DD
+   - Output: temperature across years
 
 ---
 
 ### 1.1.4 Insights Page (`/insights`)
-Displays computed statistics.
 
-**Mockup:**
+Supported insights:
 
-```
-Station: [Vilnius ▼]
-
-[ Load Insights ]
-
-Hottest Year: 2019
-Coldest Year: 1963
-Avg Temp (July 11): 18.4°C
-Temp Variability: ±6.2°C
-Missing Records: 12
-```
+- `hottest_year`
+- `coldest_year`
+- `hottest_day`
+- `coldest_day`
+- `avg_for_date`
+- `temp_variability` → defined as standard deviation
+- `missing_data_count`
 
 ---
 
 ### 1.1.5 Compare Page (`/compare`)
-Compare two stations.
 
-**Mockup:**
+User inputs:
+- Station A
+- Station B
+- Year
 
-```
-Station A: [Vilnius ▼]
-Station B: [London ▼]
-Year:      [2020]
+API:
+- `/api/v1/compare?stationA=&stationB=&year=`
 
-[ Compare ]
-
-Date       | Vilnius | London
------------|---------|--------
-2020-01-01 | -2.1    | 3.2
-...
-```
+Output:
+- Table by date
 
 ---
 
 ### 1.1.6 Error Page (`/error`)
-Displays message for internal errors.
+- Only for 500 errors
 
 ---
 
 ## 1.2 RESTful API
 
 ### 1.2.1 Core Endpoint
+GET `/api/v1/station/{stationid}`
 
-GET /api/v1/station/{stationid}
-
-Query params:
-- date=YYYY-MM-DD
-- year=YYYY
+Params:
+- date
+- year
 
 ---
 
 ### 1.2.2 Insights Endpoint
+GET `/api/v1/insights/{stationid}`
 
-GET /api/v1/insights/{stationid}
-
-Examples:
-- type=hottest_year
-- type=coldest_year
-- type=avg_for_date&date=YYYY-MM-DD
+Params:
+- type
+- optional date
 
 ---
 
-### 1.2.3 Response Format
+### 1.2.3 Compare Endpoint
+GET `/api/v1/compare`
+
+Params:
+- stationA
+- stationB
+- year
+
+---
+
+### 1.2.4 Station Listing Endpoint
+GET `/api/v1/stations`
+GET `/api/v1/stations/search`
+
+---
+
+### 1.2.5 Response Format
 
 Success:
-```
 {
   "data": ...
 }
-```
 
 Error:
-```
 {
   "error": {
     "status_code": 400,
-    "message": "Description"
+    "message": "..."
   }
 }
-```
 
 ---
 
 ## 1.3 Data Storage
 
-- `/data` folder
-- stations.txt (CSV, skip first 17 lines)
-- TG_STAIDXXXXXX.txt (CSV, skip first 20 lines)
+- Fixed-format text files with CSV payload
+- Skip header lines
 
 Fields:
-- TG (0.1°C)
+- TG → stored as integer, returned as float (1 decimal)
 - DATE
 - STAID
 - STANAME
 
-Missing values: -9999
+Missing values:
+- -9999 → treated as NULL (excluded from calculations)
 
 ---
 
@@ -187,48 +160,72 @@ Missing values: -9999
 - Valid year
 - No conflicting params
 
+---
+
 ### 2.2 Data Handling (404)
 - Missing file
 - No matching data
 
+---
+
 ### 2.3 Success (200)
-- Return structured JSON
+- Structured JSON
 
 ---
 
 ## 3. Error Handling
 
-- 400 → invalid input
-- 404 → no data
-- 500 → internal error
-
-UI:
-- Inline friendly message when API returns 400/404 for user-entered parameters
-- 500 → /error page
+- 400 / 404 → inline in UI
+- 500 → redirect to `/error`
 
 ---
 
 ## 4. UI Requirements
 
-- Simple HTML
-- Dropdowns, inputs, tables, charts
-- No complex frameworks
+- Simple UI (HTML only)
+- Pagination required
+- Search field required
 
 ---
 
 ## 5. Chart Requirements
 
-- Data from API
-- Dynamic updates
-- Proper labeling
+- Data must be aggregated (no raw daily flood)
+- Yearly chart = 1 point per year
+- Same-date chart = 1 point per year
 
 ---
 
 ## 6. Non-Functional Requirements
 
-- Caching (LRU)
-- Scalable to 25k stations
-- Logging + rotation
-- Env-based config
+### 6.1 Performance
+- LRU caching
+- Avoid repeated file reads
+
+### 6.2 Scalability
+- Support 25k stations
+- Pagination mandatory
+
+### 6.3 Data Handling
+- Replace -9999 with NULL
+- Exclude from stats
+
+### 6.4 File I/O Optimization
+- Load stations index into memory at startup
+
+### 6.5 Logging
+- Enabled with rotation
+
+### 6.6 Config
+- Debug via env var
+
+### 6.7 Portability
 - OS-independent paths
-- Handle -9999 values
+
+---
+
+## 7. Definitions
+
+- **Temperature Variability** = standard deviation of daily temperatures (excluding missing values)
+
+---
