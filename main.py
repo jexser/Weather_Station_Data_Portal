@@ -44,7 +44,7 @@ class Fields():
 
 @app.route("/")
 def home():
-    index_file_path = os.path.join("data_small", "stations.txt")
+    index_file_path = os.path.join("data", "stations.txt")
     if not os.path.exists(path=index_file_path):
         logging.critical(f"Stations index file not found at path: {index_file_path}")
         return jsonify_error(InternalServerError("Stations index data not found."))
@@ -60,7 +60,7 @@ def get_station_by(stationid):
     
     try:
         validate_station_id(stationid)
-        station_file_path = os.path.join("data_small", f"TG_STAID{str(stationid).zfill(6)}.txt")
+        station_file_path = os.path.join("data", f"TG_STAID{str(stationid).zfill(6)}.txt")
         validate_file_existence(station_file_path)
         validate_request_args(request.args)
     except APIError as error:
@@ -91,7 +91,7 @@ def get_station_by(stationid):
         return jsonify_error(error)
 
 
-@lru_cache(maxsize=32) # Cache results to improve performance for repeated requests
+@lru_cache(maxsize=128) # Cache results to improve performance for repeated requests
 def load_and_clean_data(
         file_path: str, 
         rows_to_skip: int = 0, 

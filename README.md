@@ -15,7 +15,7 @@ The application is optimized for high-performance reads from local text files, p
 ```text
 .
 ├── .gitignore            # Git ignore rules
-├── data_small/           # Data repository (Flat-file storage)
+├── data/           # Data repository (Flat-file storage)
 │   ├── .ipynb_checkpoints/
 │   ├── stations.txt      # Master list of weather stations (Metadata)
 │   └── TG_STAIDXXXXXX.txt # Individual temperature record files per station
