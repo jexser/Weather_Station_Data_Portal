@@ -17,7 +17,7 @@ The system consists of three main parts:
 - Displays stations with:
   - Pagination (500 stations per page; if request returns less than 500 stations, show all from resonse)
   - Search by station name (prefix match)
-- Search returns matching stations (ID + name via API endpoint)
+- Search returns matching stations (ID + name via API endpoint; not case sensitive)
 
 **API dependency:**
 - `/api/v1/stations?page=X`
@@ -146,6 +146,7 @@ Output:
 - Union table by date
 - Three columns table: date, temperature of Station A, temperature of Station B
 - For missing data show NULL
+- If Station A has data for the whole year but Station B only has data for January, show all dates from Jan 1 to Dec 31. API generates the full date range for the year to ensure a consistent table height.
 
 **Mockup:**
 
@@ -162,7 +163,7 @@ Output:
 | Date       | Vilnius | London                    |
 |------------|---------|---------------------------|
 | 2020-01-01 | -2.1    | 3.2                       |
-| ...                                            |
+| ...                                              |
 +--------------------------------------------------+
 ```
 
@@ -241,10 +242,18 @@ Error:
 
 ## 1.3 Data Storage
 
+Storage structure:
+├── data/           # Data repository (Flat-file storage)
+│   ├── .ipynb_checkpoints/
+│   ├── stations.txt       # Master list of weather stations (Metadata)
+│   └── TG_STAIDXXXXXX.txt # Individual temperature record files per station
+
 - Fixed-format text files with CSV payload
-- Skip header lines: 
-  - 17 header lines for index file
-  - 20 header lines for stations data files
+  - Skip header lines: 
+    - 17 header lines for index file
+    - 20 header lines for stations data files
+- Index file contains a list of all available station names and thier ID
+- Station files is accessible by id and contatins all records for one station
 - Scale Factor: Raw TG values are in 0.1°C increments (e.g., 212 = 21.2°C)
 
 Fields:
@@ -313,8 +322,8 @@ Missing values:
 - Pagination mandatory
 
 ### 6.3 Missng Data Handling
-- Replace -9999 with NULL
-- Exclude from stats
+- Replace TG value of -9999 with NULL and exclude such records from stats
+- If a user requests /api/v1/station/000199?year=2026, and the station exists but has zero records for the year 2023, API should return 200 with an empty list {"data": []}
 
 ### 6.4 File I/O Optimization
 - Load stations index into memory at startup
