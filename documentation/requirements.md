@@ -337,4 +337,7 @@ Missing values:
 ### 6.7 Portability
 - OS-independent paths
 
+### 6.8 API access
+- system to be used within public/internal space, no API keys necessary
+
 ---
