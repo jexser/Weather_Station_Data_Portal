@@ -16,7 +16,7 @@ The system consists of three main parts:
 ### 1.1.1 Home Page (`/`, `/home`)
 - Displays stations with:
   - Pagination (500 stations per page)
-  - Search by station name
+  - Search by station name (prefix match)
 - Search returns matching stations (ID + name)
 
 **API dependency:**
@@ -99,7 +99,7 @@ GET `/api/v1/insights/{stationid}`
 
 Params:
 - type
-- optional date
+- optional date (format: MM-DD for day-specific queries)
 
 ---
 
@@ -139,7 +139,10 @@ Error:
 ## 1.3 Data Storage
 
 - Fixed-format text files with CSV payload
-- Skip header lines
+- Skip header lines: 
+  - 17 header lines for index file
+  - 20 header lines for stations data files
+- Scale Factor: Raw TG values are in 0.1°C increments (e.g., 212 = 21.2°C)
 
 Fields:
 - TG → stored as integer, returned as float (1 decimal)
@@ -191,7 +194,7 @@ Missing values:
 ## 5. Chart Requirements
 
 - Data must be aggregated (no raw daily flood)
-- Yearly chart = 1 point per year
+- Yearly chart = 1 point per year, annual mean temperature (average of all valid daily temperatures in that year)
 - Same-date chart = 1 point per year
 
 ---
