@@ -1,4 +1,4 @@
-# Weather API Project – Requirements v2.2
+# Weather Station Data Portal – Requirements v2.2
 
 ## 1. General Description
 
