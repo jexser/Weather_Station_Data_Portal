@@ -1,4 +1,4 @@
-# Weather Station Data Portal – Requirements v2.3
+# Weather Station Data Portal – Requirements v2.4.1
 
 ## 1. General Description
 
@@ -16,7 +16,7 @@ The system consists of three main parts:
 ### 1.1.1 Home Page (`/`, `/home`)
 - Displays stations with:
   - Pagination (500 stations per page; if request returns less than 500 stations, show all from resonse)
-  - Search by station name (prefix match)
+  - Search by station name (case-insensitive partial match anywhere in the name)
 - Search returns matching stations (ID + name via API endpoint; not case sensitive)
 
 **API dependency:**
@@ -59,6 +59,7 @@ The system consists of three main parts:
 | GET /api/v1/compare?stationA=&stationB=&year=    |
 | GET /api/v1/stations?page=X                      |
 | GET /api/v1/stations/search?name=...             |
+| GET /api/v1/station/{stationid}/yearly           |
 +--------------------------------------------------+
 ```
 
@@ -141,6 +142,9 @@ User inputs:
 
 API:
 - `/api/v1/compare?stationA=&stationB=&year=`
+  - Leap years (366 days) must be handled correctly
+  - Date range must always span from January 1 to December 31 of the requested year
+  - Dates must be continuous with no gaps regardless of data availability
 
 Output:
 - Union table by date
@@ -240,6 +244,24 @@ Error:
 
 ---
 
+### 1.2.6 Yearly Aggregation Endpoint
+
+GET /api/v1/station/{stationid}/yearly
+
+Description:
+- Returns one aggregated data point per year (average temperature)
+  - Years with zero valid temperature records are omitted from the response
+
+Response:
+{
+  "data": [
+    { "year": 2000, "avg_temp": 7.2 },
+    ...
+  ]
+}
+
+---
+
 ## 1.3 Data Storage
 
 Storage structure:
@@ -274,12 +296,14 @@ Missing values:
 - Valid date
 - Valid year
 - No conflicting params
+- Returns empty list if no valid data
 
 ---
 
 ### 2.2 Data Handling (404)
 - Missing file
 - No matching data
+- Returns 404 if station not found
 
 ---
 
@@ -314,7 +338,11 @@ Missing values:
 ## 6. Non-Functional Requirements
 
 ### 6.1 Performance
-- LRU caching
+- LRU caching must be implemented at the station level:
+  - Parsed station files are cached per station ID
+  - Cache entries contain fully parsed datasets for a station
+  - Cache avoids repeated disk reads for the same station
+  - Cache eviction follows Least Recently Used policy
 - Avoid repeated file reads
 
 ### 6.2 Scalability

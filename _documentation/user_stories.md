@@ -1,5 +1,5 @@
 # Software Requirements Specification: Weather Station Data Portal
-> as per Requirements v2.3
+> as per Requirements v2.4.1
 
 ## 📋 Project Overview
 A Flask-based web application and RESTful API designed to provide access to historical temperature records from various weather stations stored in a distributed flat-file system. The system provides high-performance data retrieval, statistical insights, and visual comparisons of historical climate trends.
@@ -25,7 +25,7 @@ As a portal user, I need to browse and search weather stations so that I can fin
 - **Acceptance Criteria**:
   - 2.1. A search input field is present above the station table with a Search / Enter trigger.
   - 2.2. On submit, the UI calls `GET /api/v1/stations/search?name=<input>` with the user's text.
-  - 2.3. The search is case-insensitive and accepts partial (prefix) matches.
+  - 2.3. The search is case-insensitive and accepts partial matches anywhere in the station name.
   - 2.4. The API returns a maximum of 50 matching results; the UI renders all returned results in a selectable list below the input.
   - 2.5. The user can select a result from the list; the selected station's ID and Name are displayed in the table (replacing the paginated view).
   - 2.6. If the search returns zero results, the list displays a "No stations found" message.
@@ -41,7 +41,7 @@ As a developer or technical user, I need a reference page listing all available 
 - **Requirement**: The `/api` page must list all available endpoints with their parameters and usage examples.
 - **Acceptance Criteria**:
   - 3.1. The page is accessible at `/api` and linked from the main navigation.
-  - 3.2. The following endpoints are documented: `GET /api/v1/station/{id}?date=`, `GET /api/v1/station/{id}?year=`, `GET /api/v1/insights/{id}?type=`, `GET /api/v1/compare?stationA=&stationB=&year=`, `GET /api/v1/stations?page=X`, `GET /api/v1/stations/search?name=`.
+  - 3.2. The following endpoints are documented: `GET /api/v1/station/{id}?date=`, `GET /api/v1/station/{id}?year=`, `GET /api/v1/insights/{id}?type=`, `GET /api/v1/compare?stationA=&stationB=&year=`, `GET /api/v1/stations?page=X`, `GET /api/v1/stations/search?name=`, `GET /api/v1/station/{id}/yearly`.
   - 3.3. Each endpoint entry shows: HTTP method, path, accepted parameters, and at least one usage example.
   - 3.4. Both success and error response envelope shapes are documented with example JSON.
   - 3.5. The page is static HTML — no API calls are made to render it.
@@ -64,7 +64,7 @@ As a portal user, I need to visualize temperature trends for a selected station 
 - **Requirement**: When chart type "Yearly Trend" is selected, the system must render a chart showing one data point per year representing the annual mean temperature for the selected station.
 - **Acceptance Criteria**:
   - 5.1. The chart type dropdown includes "Yearly Trend" as an option.
-  - 5.2. On Load Chart, the UI calls `GET /api/v1/station/{id}?year=` iteratively or a suitable aggregation endpoint to retrieve per-year data; each year is aggregated to a single mean value (average of all valid daily temperatures, excluding `-9999` values).
+  - 5.2. On Load Chart, UI calls GET /api/v1/station/{id}/yearly to retrieve aggregated yearly average temperatures to retrieve per-year data; each year is aggregated to a single mean value (average of all valid daily temperatures, excluding `-9999` values).
   - 5.3. The chart renders exactly one point per year on the x-axis; the y-axis represents temperature in °C.
   - 5.4. Years with zero valid records are omitted from the chart.
   - 5.5. The Date input field is hidden or disabled when "Yearly Trend" is selected.
@@ -74,7 +74,7 @@ As a portal user, I need to visualize temperature trends for a selected station 
 - **Acceptance Criteria**:
   - 6.1. The chart type dropdown includes "Same Date Across Years" as an option.
   - 6.2. Selecting this chart type activates the Date input field, which accepts `MM-DD` format only.
-  - 6.3. On Load Chart, the UI calls the appropriate API to retrieve temperature for the specified `MM-DD` across all years.
+  - 6.3. On Load Chart, the UI calls API `GET /api/v1/station/{id}?date=MM-DD` (across years aggregation handled server-side) to retrieve temperature for the specified `MM-DD` across all years.
   - 6.4. The chart renders one point per year where a record exists for that date; years with missing (`-9999`) or absent records are omitted.
   - 6.5. If no date is entered and the user clicks Load Chart, an inline validation message "Please enter a date (MM-DD)" is shown and no API call is made.
   - 6.6. The x-axis represents year; the y-axis represents temperature in °C.
@@ -134,6 +134,8 @@ As a portal user, I need to compare daily temperature records between two statio
   - 11.4. Missing values are displayed as `NULL` in the respective cell.
   - 11.5. Dates where both stations have `NULL` are still shown as rows (full date range preserved).
   - 11.6. The table is scrollable; column headers remain visible while scrolling.
+  - 11.7. Leap years (366 days) are correctly handled in the output.
+  - 11.8. The date sequence is continuous with no missing dates.
 
 ---
 
@@ -256,6 +258,9 @@ As a backend developer, I need a reliable and optimized data access layer so tha
   - 21.5. File paths are constructed using OS-independent path joining (e.g., `os.path.join` or `pathlib`).
   - 21.6. Parsed file results are stored in an LRU cache keyed by station ID; repeated requests for the same station do not re-read the file.
   - 21.7. If a station file does not exist, a `FileNotFoundError` (or equivalent) is raised and mapped to a 404 API response.
+  - 21.8. The cache stores parsed station datasets keyed by station ID.
+  - 21.9. Cache size is configurable via environment variable.
+  - 21.10. Cache hit/miss behavior is logged at DEBUG level.
 
 ---
 
