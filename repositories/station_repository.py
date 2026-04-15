@@ -1,25 +1,9 @@
 import pandas as pd
 from functools import lru_cache
-from dataclasses import dataclass
+import constants
 import os, logging
-from errors import jsonify_error, InternalServerError
+from errors import InternalServerError
 import validators
-from typing import Final
-import errors
-
-ROWS_TO_SKIP_INDEX: Final[int] = 17
-ROWS_TO_SKIP_STATION: Final[int] = 20
-
-
-@dataclass 
-class Fields():
-    """
-    Data class to hold the field names for the temperature data CSV.
-    """
-    field_TG: str = "TG"
-    field_DATE: str = "DATE"
-    field_STAID: str = "STAID"
-    field_STANAME: str = "STANAME"
 
 
 @lru_cache(maxsize=128) # Cache results to improve performance for repeated requests
@@ -44,11 +28,11 @@ def _load_and_clean_data(
         skiprows=rows_to_skip
         )
     df.columns = df.columns.str.strip() # Remove leading/trailing whitespace from column names
-    if Fields.field_TG in df.columns:
-        df[Fields.field_TG] = df[Fields.field_TG].replace(-9999, pd.NA) # Replace -9999 with NaN for better handling of missing data
-        df[Fields.field_TG] = df[Fields.field_TG] / 10 # Convert temperature from tenths of degrees to degrees Celsius
+    if constants.FIELD_TG in df.columns:
+        df[constants.FIELD_TG] = df[constants.FIELD_TG].replace(-9999, pd.NA) # Replace -9999 with NaN for better handling of missing data
+        df[constants.FIELD_TG] = df[constants.FIELD_TG] / 10 # Convert temperature from tenths of degrees to degrees Celsius
     if parse_dates:
-        df[Fields.field_DATE] = pd.to_datetime(df[Fields.field_DATE], format="%Y%m%d", errors='coerce') # type: ignore
+        df[constants.FIELD_DATE] = pd.to_datetime(df[constants.FIELD_DATE], format="%Y%m%d", errors='coerce') # type: ignore
     return df
 
 
@@ -62,9 +46,9 @@ def load_station_index() -> pd.DataFrame:
         raise InternalServerError("Stations index data not found.")
         
     stations = _load_and_clean_data(index_file_path, 
-                                    rows_to_skip=ROWS_TO_SKIP_INDEX, 
+                                    rows_to_skip=constants.ROWS_TO_SKIP_INDEX, 
                                     parse_dates=False)
-    stations = stations[[Fields.field_STAID, Fields.field_STANAME]] #filter and leave only two fields we need to render
+    stations = stations[[constants.FIELD_STAID, constants.FIELD_STANAME]] #filter and leave only two fields we need to render
     return stations
 
 
@@ -77,5 +61,5 @@ def load_station(stationid: str) -> pd.DataFrame:
     validators.validate_file_existence(station_file_path)
 
     return _load_and_clean_data(file_path=station_file_path, 
-                                rows_to_skip=ROWS_TO_SKIP_STATION, 
+                                rows_to_skip=constants.ROWS_TO_SKIP_STATION, 
                                 parse_dates=True)

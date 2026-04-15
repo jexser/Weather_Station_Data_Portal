@@ -1,8 +1,7 @@
-import validators
-import repositories.station_repository as station_repo
-import datetime, os, logging
+import services.station_service as station_service
+import os, logging
 from flask import Flask, render_template, request, jsonify, Response
-from errors import APIError, BadRequest, NotFound, InternalServerError, jsonify_error
+from errors import APIError, jsonify_error
 from logging.handlers import RotatingFileHandler
 from typing import Final
 from dotenv import load_dotenv
@@ -48,41 +47,16 @@ def handle_api_error(error: APIError) -> Response:
 
 @app.route("/")
 def home():
-    try:
-        stations = station_repo.load_station_index()
-        return render_template("home.html", data=stations.to_dict(orient="records"))
-    except APIError as error:
-        logging.warning("Error while loading index file")
-        return jsonify_error(error) #TODO: return error page
-
+    stations = station_service.get_stations_index()
+    return render_template("home.html", data=stations.to_dict(orient="records"))
+    
 
 @app.route("/api/v1/station/<stationid>")
 def get_station_by(stationid: str):
     year_str = request.args.get("year")
     date_str = request.args.get("date")
     
-    validators.validate_request_args(request.args)
-    df = station_repo.load_station(stationid)
-
-    if date_str:
-        validators.validate_date_format(date_str)
-        parsed_date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-        temperature_series = df.loc[df[station_repo.Fields.field_DATE] == parsed_date][station_repo.Fields.field_TG].squeeze()
-        temperature = validators.validate_temperature_data(temperature_series)
-
-        return jsonify({
-            "stationid": stationid,
-            "date": date_str, 
-            "temperature": temperature
-        })
-    if year_str:
-        validators.validate_year_format(year_str)
-        result = df.loc[df[station_repo.Fields.field_DATE].dt.year == int(year_str)].to_dict(orient="records")
-        return jsonify(result) #if no data, it will return an empty list, which is appropriate for this case
-    
-    # TODO: already handled by validators.validate_request_args(request.args), need to be removed
-    logging.warning("No valid query parameters provided: %s", request.args)
-    raise BadRequest("Please provide a query parameter: either 'year' or 'date'.")
+    return jsonify(station_service.get_by_date_or_year(stationid, date_str, year_str))
 
 
 if __name__ == "__main__":

@@ -28,7 +28,7 @@ def validate_file_existence(file_path: str) -> APIError | None:
         raise NotFound("Station data not found.")
 
 
-def validate_request_args(args: dict) -> APIError | None:
+def validate_date_and_year_args(date_str: str | None, year_str: str | None) -> APIError | None:
     """
     Validates the query parameters in the request. It checks that either 'year' or 'date' is provided, but not both.
     Args:     
@@ -36,24 +36,26 @@ def validate_request_args(args: dict) -> APIError | None:
     Raises:
         BadRequest: If both 'year' and 'date' are provided
     """
-    if ("year" in args) and ("date" in args):
-        logging.warning("Both 'year' and 'date' query parameters provided: %s", args)
+    if (date_str) and (year_str):
+        logging.warning("Both 'year' and 'date' query parameters provided: %s, %s", date_str, year_str)
         raise BadRequest("Please provide only one query parameter: either 'year' or 'date', not both.")
-    if ("year" not in args) and ("date" not in args):
-        logging.warning("Neither 'year' or 'date' query parameters provided: %s", args)
+    if (not date_str) and (not year_str):
+        logging.warning("Neither 'year' or 'date' query parameters provided")
         raise BadRequest("Please provide one query parameter: either 'year' or 'date'")
 
 
-def validate_date_format(date_str: str) -> APIError | None:
+def validate_date_format(date_str: str) -> datetime.datetime:
     """
     Validates the date format. It should be in the format YYYY-MM-DD.
     Args:
         date_str (str): The date string to validate.
+    Returns:
+        datetime.datetime: The parsed datetime object if the format is valid.
     Raises:
         BadRequest: If the date format is invalid.
     """
     try:
-        datetime.datetime.strptime(date_str, "%Y-%m-%d")
+        return datetime.datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
         logging.warning(f"Invalid date format: {date_str}")
         raise BadRequest("Invalid date. Please provide a valid calendar date in the format YYYY-MM-DD.")
