@@ -34,11 +34,14 @@ def validate_request_args(args: dict) -> APIError | None:
     Args:     
         args (dict): The dictionary of query parameters from the request.
     Raises:
-        BadRequest: If both 'year' and 'date' are provided, or if neither is provided.
+        BadRequest: If both 'year' and 'date' are provided
     """
     if ("year" in args) and ("date" in args):
         logging.warning("Both 'year' and 'date' query parameters provided: %s", args)
         raise BadRequest("Please provide only one query parameter: either 'year' or 'date', not both.")
+    if ("year" not in args) and ("date" not in args):
+        logging.warning("Neither 'year' or 'date' query parameters provided: %s", args)
+        raise BadRequest("Please provide one query parameter: either 'year' or 'date'")
 
 
 def validate_date_format(date_str: str) -> APIError | None:

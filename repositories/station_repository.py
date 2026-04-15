@@ -3,6 +3,13 @@ from functools import lru_cache
 from dataclasses import dataclass
 import os, logging
 from errors import jsonify_error, InternalServerError
+import validators
+from typing import Final
+import errors
+
+ROWS_TO_SKIP_INDEX: Final[int] = 17
+ROWS_TO_SKIP_STATION: Final[int] = 20
+
 
 @dataclass 
 class Fields():
@@ -49,17 +56,26 @@ def load_station_index() -> pd.DataFrame:
     """
     Loads the stations index CSV file and returns a DataFrame with station IDs and names.
     """
-    index_file_path = os.path.join("data", "stations.txt")
+    index_file_path = os.path.join(os.getcwd(), "data", "stations.txt")
     if not os.path.exists(path=index_file_path):
         logging.critical(f"Stations index file not found at path: {index_file_path}")
         raise InternalServerError("Stations index data not found.")
         
-    stations = _load_and_clean_data(index_file_path, rows_to_skip=17, parse_dates=False)
+    stations = _load_and_clean_data(index_file_path, 
+                                    rows_to_skip=ROWS_TO_SKIP_INDEX, 
+                                    parse_dates=False)
     stations = stations[[Fields.field_STAID, Fields.field_STANAME]] #filter and leave only two fields we need to render
     return stations
 
-# def load_station(stationid: str) -> pd.DataFrame:
-#     """
-#     Loads the station CSV file by index and returns a DataFrame with records.
-#     """
-#     pass
+
+def load_station(stationid: str) -> pd.DataFrame:
+    """
+    Loads the station CSV file by stationid and validates it exists before loading it.
+    """
+    validators.validate_station_id(stationid)
+    station_file_path = os.path.join(os.getcwd(), "data", f"TG_STAID{stationid.zfill(6)}.txt")
+    validators.validate_file_existence(station_file_path)
+
+    return _load_and_clean_data(file_path=station_file_path, 
+                                rows_to_skip=ROWS_TO_SKIP_STATION, 
+                                parse_dates=True)

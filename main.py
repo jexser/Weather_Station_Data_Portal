@@ -1,12 +1,15 @@
 import validators
 import repositories.station_repository as station_repo
 import datetime, os, logging
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from errors import APIError, BadRequest, NotFound, InternalServerError, jsonify_error
 from logging.handlers import RotatingFileHandler
 from typing import Final
 from dotenv import load_dotenv
 
+# ===================
+# APP INIT
+# ===================
 load_dotenv()
 DEBUG: Final[bool] = str(os.getenv("Debug")).lower() == "true"
 LOG_FILE_LOCATION: Final[str] = os.path.join("logs", "app_logs.log")
@@ -26,6 +29,21 @@ logging.basicConfig(
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 app = Flask(__name__)
+# ===================
+# END OF APP INIT
+# ===================
+
+
+@app.errorhandler(APIError)
+def handle_api_error(error: APIError) -> Response:
+    """
+    Handles APIError exceptions and returns a JSON response with the error details.
+    Args:
+        error (APIError): The APIError exception that was raised
+    Returns:
+        Response: A Flask Response object containing the JSON error message
+    """
+    return jsonify_error(error)
 
 
 @app.route("/")
@@ -39,41 +57,32 @@ def home():
 
 
 @app.route("/api/v1/station/<stationid>")
-def get_station_by(stationid):
+def get_station_by(stationid: str):
     year_str = request.args.get("year")
     date_str = request.args.get("date")
     
-    try:
-        validators.validate_station_id(stationid)
-        station_file_path = os.path.join("data", f"TG_STAID{str(stationid).zfill(6)}.txt")
-        validators.validate_file_existence(station_file_path)
-        validators.validate_request_args(request.args)
-    except APIError as error:
-        return jsonify_error(error)
+    validators.validate_request_args(request.args)
+    df = station_repo.load_station(stationid)
 
-    df = station_repo._load_and_clean_data(file_path=station_file_path, rows_to_skip=20, parse_dates=True)
+    if date_str:
+        validators.validate_date_format(date_str)
+        parsed_date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+        temperature_series = df.loc[df[station_repo.Fields.field_DATE] == parsed_date][station_repo.Fields.field_TG].squeeze()
+        temperature = validators.validate_temperature_data(temperature_series)
+
+        return jsonify({
+            "stationid": stationid,
+            "date": date_str, 
+            "temperature": temperature
+        })
+    if year_str:
+        validators.validate_year_format(year_str)
+        result = df.loc[df[station_repo.Fields.field_DATE].dt.year == int(year_str)].to_dict(orient="records")
+        return jsonify(result) #if no data, it will return an empty list, which is appropriate for this case
     
-    try:
-        if date_str:
-            validators.validate_date_format(date_str)
-            parsed_date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-            temperature_series = df.loc[df[station_repo.Fields.field_DATE] == parsed_date][station_repo.Fields.field_TG].squeeze()
-            temperature = validators.validate_temperature_data(temperature_series)
-
-            return jsonify({
-                "stationid": stationid,
-                "date": date_str, 
-                "temperature": temperature
-            })
-        if year_str:
-            validators.validate_year_format(year_str)
-            result = df.loc[df[station_repo.Fields.field_DATE].dt.year == int(year_str)].to_dict(orient="records")
-            return jsonify(result) #if no data, it will return an empty list, which is appropriate for this case
-        
-        logging.warning("No valid query parameters provided: %s", request.args)
-        raise BadRequest("Please provide a query parameter: either 'year' or 'date'.")
-    except APIError as error:
-        return jsonify_error(error)
+    # TODO: already handled by validators.validate_request_args(request.args), need to be removed
+    logging.warning("No valid query parameters provided: %s", request.args)
+    raise BadRequest("Please provide a query parameter: either 'year' or 'date'.")
 
 
 if __name__ == "__main__":
