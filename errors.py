@@ -1,3 +1,5 @@
+from flask import jsonify, Response
+
 class APIError(Exception):
     """Base class for API errors."""
     def __init__(self, message: str, status_code: int) -> None:
@@ -21,3 +23,21 @@ class InternalServerError(APIError):
     def __init__(self, message: str) -> None:
         self.message = message
         self.status_code = 500
+
+def jsonify_error(error: APIError) -> Response:
+    """
+    Helper function to create a JSON response for errors.
+    Args:
+        error (APIError): The error object containing the message and status code.
+    Returns:
+        A JSON response with the error message and appropriate HTTP status code.
+    """
+
+    response = jsonify({
+        "error": {
+            "status_code": error.status_code,
+            "message": error.message
+        }
+    })
+    response.status_code = error.status_code
+    return response
