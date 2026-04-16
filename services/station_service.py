@@ -4,7 +4,7 @@ from flask import jsonify, Response
 import json
 
 
-def get_stations_index_page(page_str: str | None = "1") -> str:
+def get_stations_index_page(page_str: str | None = "1") -> dict:
     """
     Returns the stations index as a DataFrame with station IDs and names.
     Args:
@@ -30,14 +30,14 @@ def get_stations_index_page(page_str: str | None = "1") -> str:
     remainder = lotal_records - (page * constants.INDEX_PAGE_SIZE)
     has_next: bool = remainder > 0 
 
-    json_payload = json.dumps({
+    result = {
         "data": paginated.to_dict(orient="records"),
         "total": lotal_records,
         "page": page_str,
         "page_size": constants.INDEX_PAGE_SIZE,
         "has_next": has_next
-    })
-    return json_payload
+    }
+    return result
 
 
 def _paginate_index(df: pd.DataFrame, page: int, page_size: int = 500) -> pd.DataFrame:

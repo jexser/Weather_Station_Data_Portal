@@ -1,19 +1,12 @@
+{% from "macros.html" import pagination %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Weather Data API</title>
+    <title>Weather Station Data Portal</title>
 </head>
 <body>
-    <h1>Weather Data API</h1>
-    <h2>Examples</h2>
-    <p>URL formal: http://127.0.0.1:5000/api/v1/station/{stationid}</p>
-    <p>Example: http://127.0.0.1:5000/api/v1/station/10</p>
-    <br>
-    <p>URL formal: http://127.0.0.1:5000/api/v1/station/{stationid}?date={date}</p>
-    <p>Example: http://127.0.0.1:5000/api/v1/station/10?date=2005-10-10</p>
-    <br>
-    <p>URL formal: http://127.0.0.1:5000/api/v1/station/{stationid}?year={year}</p>
-    <p>Example: http://127.0.0.1:5000/api/v1/station/10?year=2005</p>
+    <h1>Weather Station Data Portal</h1>
+    <h2>Search</h2>
     <br>
     <hr>
     <h2>Available stations</h2>
@@ -34,6 +27,8 @@
                 {% endfor %}
             </tbody>
         </table>
+        {{ pagination(page, has_next, 'home') }}
+        <p>Items: {{ data|length }}</p>
     </p>
 </body>
 </html>

@@ -6,6 +6,7 @@ from logging.handlers import RotatingFileHandler
 from typing import Final
 from dotenv import load_dotenv
 import json
+import constants
 
 # ===================
 # APP INIT
@@ -48,26 +49,31 @@ def handle_api_error(error: APIError) -> Response:
 
 @app.route("/")
 def home():
-    stations = station_service.get_stations_index_page(page_str="1")
-    stations_json = json.loads(stations)
-    data: list = stations_json["data"]
+    page_str = request.args.get("page", "1") # default = 1
+    stations = station_service.get_stations_index_page(page_str=page_str)
+    data: list = stations["data"]
+    has_next = stations["has_next"]
 
-    return render_template("home.html", data=data)
+    return render_template(
+        "home.html", 
+        data=data, 
+        page=int(page_str),
+        has_next=has_next,
+        page_size=constants.INDEX_PAGE_SIZE
+    )
 
 
 @app.route("/api/v1/stations")
 def paginated_station():
     page = request.args.get("page")
-    
     stations = station_service.get_stations_index_page(page_str=page)
-    stations_json = json.loads(stations)
     
     return jsonify({
-        "data": stations_json["data"],
-        "total": stations_json["total"],
-        "page": stations_json["page"],
-        "page_size": stations_json["page_size"],
-        "has_next": stations_json["has_next"]
+        "data": stations["data"],
+        "total": stations["total"],
+        "page": stations["page"],
+        "page_size": stations["page_size"],
+        "has_next": stations["has_next"]
     })
 
 
