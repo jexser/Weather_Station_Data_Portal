@@ -117,3 +117,9 @@ def validate_page_number(page_str: str | None) -> int:
         raise BadRequest("Page must be >= 1")
     
     return page
+
+
+def validate_station_name(staion_name: str):
+    pattern = "^[A-Za-z\\s'-.]+$"
+    if not re.match(pattern=pattern, string=staion_name):
+        raise BadRequest("Provide correct name; Allowed characters: Letters, space, dash, apostrophe, dot")

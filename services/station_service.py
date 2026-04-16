@@ -30,14 +30,14 @@ def get_stations_index_page(page_str: str | None = "1") -> dict:
     remainder = lotal_records - (page * constants.INDEX_PAGE_SIZE)
     has_next: bool = remainder > 0 
 
-    result = {
+    payload = {
         "data": paginated.to_dict(orient="records"),
         "total": lotal_records,
         "page": page_str,
         "page_size": constants.INDEX_PAGE_SIZE,
         "has_next": has_next
     }
-    return result
+    return payload
 
 
 def _paginate_index(df: pd.DataFrame, page: int, page_size: int = 500) -> pd.DataFrame:
@@ -85,3 +85,24 @@ def get_by_date_or_year(stationid: str, date_str: str | None, year_str: str | No
         raise errors.BadRequest("Either date or year must be provided")
 
     return result
+
+
+def find_stations_by_name(station_name: str) -> dict:
+    validators.validate_station_name(staion_name=station_name)
+
+    df = station_repo.load_station_index()
+    df[constants.FIELD_STANAME] = df[constants.FIELD_STANAME].str.capitalize()
+    search_result = df.loc[df[constants.FIELD_STANAME].str.contains(station_name.capitalize())].to_dict(orient="records")
+    search_result_records = len(search_result)
+
+    if search_result_records == 0:
+        search_result = "No stations found"
+    elif search_result_records > constants.MAX_SEARCH_RESULTS:
+        search_result = search_result[0:50]
+
+    payload = {
+        "data": search_result,
+        "search_word": station_name,
+        "search_results": len(search_result)
+    }
+    return payload

@@ -9,3 +9,4 @@ ROWS_TO_SKIP_INDEX: Final[int] = 17
 ROWS_TO_SKIP_STATION: Final[int] = 20
 
 INDEX_PAGE_SIZE: Final[int] = 50 #500 for prod
+MAX_SEARCH_RESULTS: Final[int] = 5 #50 for prod

@@ -5,8 +5,17 @@
     <title>Weather Station Data Portal</title>
 </head>
 <body>
+    <br>
+    <hr>
     <h1>Weather Station Data Portal</h1>
-    <h2>Search</h2>
+    <h2>Find station id</h2>
+    <div>
+        <form method="get" action="{{ url_for('home') }}">
+            <label for="station_name">Station name: </label>
+            <input type="text" id="station_name" name="station_name">
+            <input type="submit" id="search_button" value="Search">
+        </form>
+    </div>
     <br>
     <hr>
     <h2>Available stations</h2>

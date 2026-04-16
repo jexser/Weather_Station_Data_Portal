@@ -50,9 +50,16 @@ def handle_api_error(error: APIError) -> Response:
 @app.route("/")
 def home():
     page_str = request.args.get("page", "1") # default = 1
-    stations = station_service.get_stations_index_page(page_str=page_str)
-    data: list = stations["data"]
-    has_next = stations["has_next"]
+    station_name = request.args.get("station_name")
+
+    if station_name:
+        stations = station_service.find_stations_by_name(station_name)
+        data = stations["data"]
+        has_next = False
+    else:
+        stations = station_service.get_stations_index_page(page_str=page_str)
+        data: list = stations["data"]
+        has_next = stations["has_next"]
 
     return render_template(
         "home.html", 
@@ -83,6 +90,21 @@ def get_station_by(stationid: str):
     date_str = request.args.get("date")
     
     return jsonify(station_service.get_by_date_or_year(stationid, date_str, year_str))
+
+
+@app.route("/api/v1/stations/search")
+def find_station_by_name():
+    name_str = request.args.get("name")
+
+    if name_str:
+        result = station_service.find_stations_by_name(name_str)
+        return jsonify({
+            "data": result["data"],
+            "search_word": result["search_word"],
+            "search_results": result["search_results"]
+        })
+    else:
+        raise InternalServerError("No value for param 'name' is provided")
 
 
 if __name__ == "__main__":

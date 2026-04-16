@@ -27,7 +27,7 @@ As a portal user, I need to browse and search weather stations so that I can fin
   - 2.2. On submit, the UI calls `GET /api/v1/stations/search?name=<input>` with the user's text.
   - 2.3. The search is case-insensitive and accepts partial matches anywhere in the station name.
   - 2.4. The API returns a maximum of 50 matching results; the UI renders all returned results in a selectable list below the input.
-  - 2.5. The user can select a result from the list; the selected station's ID and Name are displayed in the table (replacing the paginated view).
+  - 2.5. The selected station's ID and Name are displayed in the table (replacing the paginated view).
   - 2.6. If the search returns zero results, the list displays a "No stations found" message.
   - 2.7. Clearing the search input and re-submitting restores the default paginated station list.
 
