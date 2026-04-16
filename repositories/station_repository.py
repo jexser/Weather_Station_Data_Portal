@@ -13,15 +13,16 @@ def _load_and_clean_data(
         parse_dates: bool = False
         ) -> pd.DataFrame:
     """
-    Loads a CSV file, skipping a specified number of rows (0 by default)
-    Optionally, parses the date column. 
-    Removes any leading or trailing whitespace from the column names.
+    Loads an ECA&D-format CSV file and applies standard cleaning steps.
+    Column name whitespace is stripped. If a TG column is present, -9999 sentinels
+    are replaced with pd.NA and values are divided by 10 to convert from tenths of
+    degrees Celsius to degrees Celsius. Dates are optionally parsed to datetime.
     Args:
         file_path (str): The path to the CSV file to be loaded.
-        rows_to_skip (int): The number of rows to skip at the beginning of the file. Default is 0.
-        parse_dates (bool): Whether to parse the date column. Default is False.
+        rows_to_skip (int): The number of header rows to skip. Default is 0.
+        parse_dates (bool): Whether to parse the DATE column to datetime. Default is False.
     Returns:
-        pd.DataFrame: cleaned DataFrame ready for analysis or further processing.
+        pd.DataFrame: Cleaned DataFrame ready for analysis or further processing.
     """
     df = pd.read_csv(
         file_path, 
@@ -38,7 +39,11 @@ def _load_and_clean_data(
 
 def load_station_index() -> pd.DataFrame:
     """
-    Loads the stations index CSV file and returns a DataFrame with station IDs and names.
+    Loads the stations index file and returns a cleaned DataFrame with station IDs and names.
+    Returns:
+        pd.DataFrame: DataFrame with STAID and STANAME columns; station names are stripped of whitespace.
+    Raises:
+        InternalServerError: If the stations index file is not found on disk.
     """
     index_file_path = os.path.join(os.getcwd(), "data", "stations.txt")
     if not os.path.exists(path=index_file_path):
@@ -55,7 +60,14 @@ def load_station_index() -> pd.DataFrame:
 
 def load_station(stationid: str) -> pd.DataFrame:
     """
-    Loads the station CSV file by stationid and validates it exists before loading it.
+    Loads a station's temperature data file and returns a cleaned DataFrame.
+    Args:
+        stationid (str): The station ID used to locate the file (e.g. "1" resolves to TG_STAID000001.txt).
+    Returns:
+        pd.DataFrame: Cleaned DataFrame with DATE (datetime) and TG (°C) columns.
+    Raises:
+        BadRequest: If the station ID format is invalid.
+        NotFound: If no data file exists for the given station ID.
     """
     validators.validate_station_id(stationid)
     station_file_path = os.path.join(os.getcwd(), "data", f"TG_STAID{stationid.zfill(6)}.txt")

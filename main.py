@@ -5,7 +5,6 @@ from errors import APIError, InternalServerError, jsonify_error
 from logging.handlers import RotatingFileHandler
 from typing import Final
 from dotenv import load_dotenv
-import json
 import constants
 
 # ===================

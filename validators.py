@@ -1,8 +1,9 @@
-from errors import APIError, BadRequest, NotFound
+from errors import BadRequest, NotFound
+from typing import Any
 import re, os, datetime, logging, pandas
 
 
-def validate_station_id(stationid: str) -> APIError | None:
+def validate_station_id(stationid: str) -> None:
     """
     Validates the station ID format. It should be a string of 1 to 6 digits.
     Args:        
@@ -15,7 +16,7 @@ def validate_station_id(stationid: str) -> APIError | None:
         raise BadRequest("Invalid station ID format. Please provide a valid station ID.")
 
 
-def validate_file_existence(file_path: str) -> APIError | None:
+def validate_file_existence(file_path: str) -> None:
     """
     Checks if the specified file exists. If it does not exist, raises a NotFound error.
     Args:
@@ -30,11 +31,13 @@ def validate_file_existence(file_path: str) -> APIError | None:
 
 def validate_date_and_year_args(date_str: str | None, year_str: str | None) -> None:
     """
-    Validates the query parameters in the request. It checks that either 'year' or 'date' is provided, but not both.
-    Args:     
-        args (dict): The dictionary of query parameters from the request.
+    Validates that exactly one of date_str or year_str is provided.
+    Args:
+        date_str (str | None): The date query parameter, or None if not provided.
+        year_str (str | None): The year query parameter, or None if not provided.
     Raises:
-        BadRequest: If both 'year' and 'date' are provided
+        BadRequest: If both date_str and year_str are provided.
+        BadRequest: If neither date_str nor year_str are provided.
     """
     if (date_str) and (year_str):
         logging.warning("Both 'year' and 'date' query parameters provided: %s, %s", date_str, year_str)
@@ -74,11 +77,11 @@ def validate_year_format(year_str: str) -> None:
         raise BadRequest("Invalid year format. Please provide a 4-digit year.")
 
 
-def validate_temperature_data(temperature_series) -> float | None:
+def validate_temperature_data(temperature_series: Any) -> float:
     """
     Validates the temperature data. It checks if the data is empty or cannot be converted to a float.
     Args:
-        temperature_series: The temperature data to validate, typically a pandas Series.
+        temperature_series (Any): The result of a pandas .squeeze() call — a scalar when one row matches, a Series when multiple rows match.
     Returns:
         float: The validated temperature value if the data is valid.
     Raises:
@@ -103,7 +106,7 @@ def validate_page_number(page_str: str | None) -> int:
     Returns:
         int: Validated integer page number
     Raises:
-        BadRequest: If the page number is not a valid integer.
+        BadRequest: If page_str is None, not a valid integer, or less than 1.
     """
     if page_str is None:
         raise BadRequest("Please provide a page number")
@@ -119,7 +122,14 @@ def validate_page_number(page_str: str | None) -> int:
     return page
 
 
-def validate_station_name(staion_name: str):
+def validate_station_name(staion_name: str) -> None:
+    """
+    Validates that a station name contains only allowed characters.
+    Args:
+        staion_name (str): The station name to validate.
+    Raises:
+        BadRequest: If the name contains characters outside of letters, spaces, dashes, apostrophes, or dots.
+    """
     pattern = "^[A-Za-z\\s'-.]+$"
     if not re.match(pattern=pattern, string=staion_name):
         raise BadRequest("Provide correct name; Allowed characters: Letters, space, dash, apostrophe, dot")

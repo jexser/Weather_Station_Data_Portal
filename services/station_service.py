@@ -1,19 +1,17 @@
 import errors, validators, constants, repositories.station_repository as station_repo
 import pandas as pd
-from flask import jsonify, Response
-import json
 
 
 def get_stations_index_page(page_str: str | None = "1") -> dict:
     """
-    Returns the stations index as a DataFrame with station IDs and names.
+    Returns a paginated page of the stations index.
     Args:
-        page (int): page to be returned
+        page_str (str | None): The page number as a string. Defaults to "1".
     Returns:
-        dict: A subset of the original DataFrame containing only the rows for the requested page; \
-            also contains total record before pagination, current page and gape size
-    Raises: 
-        BadRequest: If page if page is not int or less than 1
+        dict: Contains the paginated station records under "data", total record count,
+            current page, page size, and a "has_next" flag.
+    Raises:
+        BadRequest: If page_str is not a valid integer or is less than 1.
     """
     page = validators.validate_page_number(page_str)
     stations = station_repo.load_station_index()
@@ -59,8 +57,16 @@ def get_by_date_or_year(stationid: str, date_str: str | None, year_str: str | No
     """
     Returns temperature data for a station filtered by a specific date or year.
     Exactly one of date_str or year_str must be provided.
-    For a date query, returns a dict with stationid, date, and temperature.
-    For a year query, returns a list of daily records for that year.
+    Args:
+        stationid (str): The station ID to query.
+        date_str (str | None): A date string in YYYY-MM-DD format, or None.
+        year_str (str | None): A year string in YYYY format, or None.
+    Returns:
+        dict: For a date query — contains stationid, date, and temperature.
+        list: For a year query — a list of daily records for that year; empty list if no data.
+    Raises:
+        BadRequest: If both or neither of date_str and year_str are provided, or if formats are invalid.
+        NotFound: If the station file does not exist.
     """
     validators.validate_date_and_year_args(date_str, year_str)
     df = station_repo.load_station(stationid)
@@ -88,6 +94,18 @@ def get_by_date_or_year(stationid: str, date_str: str | None, year_str: str | No
 
 
 def find_stations_by_name(station_name: str) -> dict:
+    """
+    Searches the station index for stations whose names contain the given search term.
+    Results are capped at MAX_SEARCH_RESULTS if there are too many matches.
+    Args:
+        station_name (str): The search term to match against station names.
+    Returns:
+        dict: Contains matched station records under "data", the original search term
+            under "search_word", and the number of results under "search_results".
+            If no matches are found, "data" is the string "No stations found".
+    Raises:
+        BadRequest: If station_name contains invalid characters.
+    """
     validators.validate_station_name(staion_name=station_name)
 
     df = station_repo.load_station_index()
