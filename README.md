@@ -1,108 +1,155 @@
 # Weather Station Data Portal
 
-A Flask-based web application and RESTful API designed to provide access to historical temperature records from various weather stations stored in a distributed flat-file system.
+A Flask-based web application and RESTful API providing access to historical temperature records from ECA&D weather stations stored as flat files.
 
 ## Overview
 
-This project serves two primary purposes:
-1.  **Web Portal**: A user-friendly interface to browse a list of available weather stations via an HTML dashboard.
-2.  **RESTful API**: A programmatic way to query specific temperature records using station IDs and optional filters (year or date).
+The project has two parts:
 
-The application is optimized for high-performance reads from local text files, performing real-time data cleaning and transformation.
+1. **Web Portal** — Browse and search weather stations; view paginated station lists.
+2. **RESTful API** — Query temperature records by station, date, or year. Designed for use by both the portal UI and external consumers.
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 .
-├── .gitignore            # Git ignore rules
-├── data/           # Data repository (Flat-file storage)
-│   ├── .ipynb_checkpoints/
-│   ├── stations.txt      # Master list of weather stations (Metadata)
-│   └── TG_STAIDXXXXXX.txt # Individual temperature record files per station
-├── logs/                 # Application logs
-├── static/               # Static assets (CSS, JS, Images)
-├── templates/            # HTML templates
-│   └── home.html        # Main dashboard view
-├── .env                  # Environment variables
-├── errors.py             # Error handling utilities
-├── main.py               # Flask application logic, API routing, and data processing
-└── README.md             # Project documentation
+├── data/
+│   ├── stations.txt            # Station index (97 stations; 17 header lines)
+│   └── TG_STAIDXXXXXX.txt      # Per-station daily temperature records (20 header lines)
+├── logs/                       # Rotating log output
+├── repositories/
+│   └── station_repository.py   # File I/O; LRU-cached data loading
+├── services/
+│   └── station_service.py      # Business logic: pagination, search, filtering
+├── templates/
+│   ├── home.html               # Station browser UI
+│   └── macros.html             # Shared Jinja2 macros (pagination)
+├── routes/
+│   └── api.py                  # Placeholder for future route modules
+├── constants.py                # Field names and config constants
+├── errors.py                   # APIError hierarchy and JSON serializer
+├── main.py                     # App init, logging, route handlers
+├── validators.py               # Input validation (raises 400/404 on failure)
+└── requirements.txt
 ```
 
-## ⚙️ How It Works
+## Architecture
 
-### Data Processing Pipeline
-The application uses a robust loading mechanism (`load_and_clean_data`) to handle the complexities of raw text files:
-*   **Whitespace Stripping**: Automatically removes leading/trailing whitespace from all column headers to prevent `KeyError` during parsing.
-*   **Temperature Scaling**: Converts temperature values from tenths of degrees (stored in text) to standard Celsius (floating point).
-*   **Date Parsing**: Transforms raw date strings into Python `datetime` objects for accurate filtering and comparison.
+Requests flow through three layers:
 
-### Web Interface
-When accessing the root URL (`/`):
-1.  The app parses `stations.txt`, skipping metadata headers.
-2.  It extracts Station IDs and Names.
-3.  It renders an HTML table showing all available stations.
+```
+Route handler (main.py)
+  → Service layer (services/station_service.py)
+    → Repository layer (repositories/station_repository.py)
+      → Flat files (data/)
+```
 
-### API Endpoints
+The repository's `_load_and_clean_data()` is LRU-cached by file path, so repeated requests for the same station avoid redundant disk reads. It handles header skipping, whitespace stripping, TG scaling (÷10 → °C), and `-9999` → `null` replacement.
 
-#### Get Station Data
-Retrieves temperature records for a specific station, optionally filtered by year or date.
+## API Endpoints
 
-**Endpoint:** `GET /api/v1/station/<stationid>`
+### Station listing
 
-**Path Parameters:**
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `stationid` | string | The 6-digit zero-padded station ID (e.g., `000001`) |
+```
+GET /api/v1/stations?page=X
+```
 
-**Query Parameters (Optional):**
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `date` | string | A specific date in `YYYY-MM-DD` format. Returns a single temperature value. |
-| `year` | string | A 4-digit year (e.g., `2023`). Returns all records for that year. |
+Returns a paginated list of stations (500 per page; page defaults to 1).
 
-**Example Requests:**
-*   `GET /api/v1/station/000001?date=2023-05-20` $\rightarrow$ Returns temperature for that day.
-*   `GET /api/v1/station/000001?year=2023` $\rightarrow$ Returns all records for 2023.
-
-**Example JSON Response (Date Lookup):**
 ```json
 {
-  "stationid": "000001",
-  "date": "2023-05-20", 
-  "temperature": 15.2
+  "data": [{ "STAID": 1, "STANAME": "VAEXJOE" }],
+  "items": 97,
+  "page": 1,
+  "page_size": 500,
+  "has_next": false
 }
 ```
 
-### Error Handling
-The API implements a comprehensive error handling strategy:
-*   **`400 Bad Request`**: Returned for invalid station ID formats, malformed date strings (e.g., `2023-13-45`), or providing both `year` and `date` simultaneously.
-*   **`404 Not Found`**: Returned if the requested station file does not exist on the server, or if a valid date/year was requested but contains no recorded data.
-*   **`500 Internal Server Error`**: Returned for unexpected server-side errors.
+### Station search
 
-## 🛠️ Technical Stack
+```
+GET /api/v1/stations/search?name=<query>
+```
 
-*   **Language**: Python 3.x
-*   **Web Framework**: [Flask](https://flask.palletsprojects.com/)
-*   **Data Processing**: [Pandas](https://pandas.pydata.org/)
-*   **Templating Engine**: Jinja2
+Case-insensitive partial match on station name. Returns up to 50 results.
 
-## 🚀 Getting Started
+```json
+{
+  "data": [{ "STAID": 1, "STANAME": "Vaexjoe" }],
+  "search_query": "vae",
+  "items": 1
+}
+```
+
+### Temperature by date
+
+```
+GET /api/v1/station/<stationid>?date=YYYY-MM-DD
+```
+
+```json
+{
+  "data": { "stationid": "000001", "date": "2023-05-20", "temperature": 15.2 },
+  "items": 1
+}
+```
+
+### Temperature by year
+
+```
+GET /api/v1/station/<stationid>?year=YYYY
+```
+
+Returns all daily records for that year. Returns `{"data": [], "items": 0}` if the station exists but has no data for that year.
+
+### Error responses
+
+All errors use a consistent envelope:
+
+```json
+{ "error": { "status_code": 400, "message": "..." } }
+```
+
+| Status | Condition |
+|---|---|
+| 400 | Invalid station ID, bad date/year format, both `date` and `year` provided, missing required param |
+| 404 | Station file not found, no record for requested date |
+| 500 | Unexpected server error |
+
+## Getting Started
 
 ### Prerequisites
-*   Python 3.x
-*   `pip` (Python package manager)
+
+Python 3.10+
 
 ### Installation
 
-1.  Clone the repository.
-2.  Install required dependencies:
-    ```bash
-    pip install flask pandas
-    ```
+```bash
+pip install -r requirements.txt
+```
 
-### Running the Application
+### Configuration
 
-Run the main script:
+Create a `.env` file in the project root:
+
+```env
+Debug=True
+```
+
+`Debug=True` enables Flask hot-reload and DEBUG-level logging. Omit or set to `False` for production.
+
+### Running
+
 ```bash
 python main.py
+```
+
+Runs on `http://127.0.0.1:5000`.
+
+## Tech Stack
+
+- **Python 3.10+**
+- **Flask 3.x** — web framework and routing
+- **Pandas 3.x** — data loading and transformation
+- **Jinja2** — HTML templating

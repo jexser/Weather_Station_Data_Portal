@@ -114,5 +114,5 @@ def find_station_by_name():
 
 
 if __name__ == "__main__":
-    app.run(debug=True if DEBUG else False)
     station_repository.load_station_index() #preload for caching
+    app.run(debug=True if DEBUG else False)
