@@ -12,5 +12,5 @@ ROWS_TO_SKIP_INDEX: Final[int] = 17
 ROWS_TO_SKIP_STATION: Final[int] = 20
 
 #TODO: make env vars
-INDEX_PAGE_SIZE: Final[int] = 50 #500 for prod
-MAX_SEARCH_RESULTS: Final[int] = 5 #50 for prod
+INDEX_PAGE_SIZE: Final[int] = 20 #500 for prod
+MAX_SEARCH_RESULTS: Final[int] = 10 #50 for prod

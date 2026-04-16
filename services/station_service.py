@@ -16,14 +16,7 @@ def get_stations_index_page(page_str: str | None = "1") -> dict:
     page = validators.validate_page_number(page_str)
     stations = station_repo.load_station_index()
     lotal_records = len(stations)
-    if lotal_records > constants.INDEX_PAGE_SIZE:
-        paginated = _paginate_index(
-            stations, 
-            page = page, 
-            page_size = constants.INDEX_PAGE_SIZE
-        )
-    else:
-        paginated = stations
+    paginated = _paginate_index(stations, page=page, page_size=constants.INDEX_PAGE_SIZE)
 
     remainder = lotal_records - (page * constants.INDEX_PAGE_SIZE)
     has_next: bool = remainder > 0 
