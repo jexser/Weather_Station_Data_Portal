@@ -20,7 +20,7 @@ As a portal user, I need to browse and search weather stations so that I can fin
   - 1.5. The currently active page number is visually indicated.
   - 1.6. Navigating to a new page replaces the current table contents with the new page's results.
 
-### User Story 2: Search Stations by Name (Combobox)
+### User Story 2: Search Stations by Name (Textbox)
 - **Requirement**: The Home page must provide a combobox that lets users type a partial station name, query the search API, and select from returned results.
 - **Acceptance Criteria**:
   - 2.1. A search input field is present above the station table with a Search / Enter trigger.
