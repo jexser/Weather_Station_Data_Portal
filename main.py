@@ -1,10 +1,11 @@
 import services.station_service as station_service
 import os, logging
 from flask import Flask, render_template, request, jsonify, Response
-from errors import APIError, jsonify_error
+from errors import APIError, InternalServerError, jsonify_error
 from logging.handlers import RotatingFileHandler
 from typing import Final
 from dotenv import load_dotenv
+import json
 
 # ===================
 # APP INIT
@@ -47,9 +48,28 @@ def handle_api_error(error: APIError) -> Response:
 
 @app.route("/")
 def home():
-    stations = station_service.get_stations_index()
-    return render_template("home.html", data=stations.to_dict(orient="records"))
+    stations = station_service.get_stations_index_page(page_str="1")
+    stations_json = json.loads(stations)
+    data: list = stations_json["data"]
+
+    return render_template("home.html", data=data)
+
+
+@app.route("/api/v1/stations")
+def paginated_station():
+    page = request.args.get("page")
     
+    stations = station_service.get_stations_index_page(page_str=page)
+    stations_json = json.loads(stations)
+    
+    return jsonify({
+        "data": stations_json["data"],
+        "total": stations_json["total"],
+        "page": stations_json["page"],
+        "page_size": stations_json["page_size"],
+        "has_next": stations_json["has_next"]
+    })
+
 
 @app.route("/api/v1/station/<stationid>")
 def get_station_by(stationid: str):

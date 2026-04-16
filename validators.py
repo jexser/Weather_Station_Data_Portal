@@ -28,7 +28,7 @@ def validate_file_existence(file_path: str) -> APIError | None:
         raise NotFound("Station data not found.")
 
 
-def validate_date_and_year_args(date_str: str | None, year_str: str | None) -> APIError | None:
+def validate_date_and_year_args(date_str: str | None, year_str: str | None) -> None:
     """
     Validates the query parameters in the request. It checks that either 'year' or 'date' is provided, but not both.
     Args:     
@@ -61,7 +61,7 @@ def validate_date_format(date_str: str) -> datetime.datetime:
         raise BadRequest("Invalid date. Please provide a valid calendar date in the format YYYY-MM-DD.")
 
 
-def validate_year_format(year_str: str) -> APIError | None:
+def validate_year_format(year_str: str) -> None:
     """
     Validates the year format. It should be a 4-digit number.
     Args:
@@ -74,7 +74,7 @@ def validate_year_format(year_str: str) -> APIError | None:
         raise BadRequest("Invalid year format. Please provide a 4-digit year.")
 
 
-def validate_temperature_data(temperature_series) -> APIError | float | None:
+def validate_temperature_data(temperature_series) -> float | None:
     """
     Validates the temperature data. It checks if the data is empty or cannot be converted to a float.
     Args:
@@ -93,3 +93,27 @@ def validate_temperature_data(temperature_series) -> APIError | float | None:
     except (ValueError, TypeError):
         logging.warning(f"Invalid temperature data: {temperature_series}")
         raise BadRequest("No temperature data found.")
+    
+
+def validate_page_number(page_str: str | None) -> int:
+    """
+    Validates the page number. It should be a an integer in the form of a string.
+    Args:
+        page_str (str | None): The page number as a string.
+    Returns:
+        int: Validated integer page number
+    Raises:
+        BadRequest: If the page number is not a valid integer.
+    """
+    if page_str is None:
+        raise BadRequest("Please provide a page number")
+    
+    try:
+        page = int(page_str)
+    except ValueError:
+        raise BadRequest("Page must be integer")
+    
+    if page < 1:
+        raise BadRequest("Page must be >= 1")
+    
+    return page

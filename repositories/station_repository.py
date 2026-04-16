@@ -49,6 +49,7 @@ def load_station_index() -> pd.DataFrame:
                                     rows_to_skip=constants.ROWS_TO_SKIP_INDEX, 
                                     parse_dates=False)
     stations = stations[[constants.FIELD_STAID, constants.FIELD_STANAME]] #filter and leave only two fields we need to render
+    stations[constants.FIELD_STANAME] = stations[constants.FIELD_STANAME].str.strip()
     return stations
 
 

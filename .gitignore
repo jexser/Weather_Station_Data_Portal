@@ -6,3 +6,4 @@ logs/
 .claude/
 CLAUDE.md
 /ven/
+*.ipynb
