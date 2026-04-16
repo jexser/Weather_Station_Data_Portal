@@ -1,11 +1,12 @@
 import services.station_service as station_service
 import os, logging
 from flask import Flask, render_template, request, jsonify, Response
-from errors import APIError, InternalServerError, jsonify_error
+from errors import APIError, BadRequest, jsonify_error
 from logging.handlers import RotatingFileHandler
 from typing import Final
 from dotenv import load_dotenv
 import constants
+import repositories.station_repository as station_repository
 
 # ===================
 # APP INIT
@@ -54,7 +55,7 @@ def home():
     if station_name:
         stations = station_service.find_stations_by_name(station_name)
         data = stations["data"]
-        has_next = False
+        has_next = stations["has_next"]
     else:
         stations = station_service.get_stations_index_page(page_str=page_str)
         data: list = stations["data"]
@@ -71,12 +72,12 @@ def home():
 
 @app.route("/api/v1/stations")
 def paginated_station():
-    page = request.args.get("page")
+    page = request.args.get("page", "1")
     stations = station_service.get_stations_index_page(page_str=page)
     
     return jsonify({
         "data": stations["data"],
-        "total": stations["total"],
+        "items": stations["items"],
         "page": stations["page"],
         "page_size": stations["page_size"],
         "has_next": stations["has_next"]
@@ -87,8 +88,14 @@ def paginated_station():
 def get_station_by(stationid: str):
     year_str = request.args.get("year")
     date_str = request.args.get("date")
+
+    results = station_service.get_by_date_or_year(stationid, date_str, year_str)
+    items = len(results)
     
-    return jsonify(station_service.get_by_date_or_year(stationid, date_str, year_str))
+    return jsonify({
+        "data": station_service.get_by_date_or_year(stationid, date_str, year_str),
+        "items": items
+    })
 
 
 @app.route("/api/v1/stations/search")
@@ -99,12 +106,13 @@ def find_station_by_name():
         result = station_service.find_stations_by_name(name_str)
         return jsonify({
             "data": result["data"],
-            "search_word": result["search_word"],
-            "search_results": result["search_results"]
+            "search_query": result["search_query"],
+            "items": result["items"]
         })
     else:
-        raise InternalServerError("No value for param 'name' is provided")
+        raise BadRequest("No value for param 'name' is provided")
 
 
 if __name__ == "__main__":
     app.run(debug=True if DEBUG else False)
+    station_repository.load_station_index() #preload for caching

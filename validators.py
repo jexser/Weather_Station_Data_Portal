@@ -95,7 +95,7 @@ def validate_temperature_data(temperature_series: Any) -> float:
         return temperature
     except (ValueError, TypeError):
         logging.warning(f"Invalid temperature data: {temperature_series}")
-        raise BadRequest("No temperature data found.")
+        raise NotFound("No temperature data found.")
     
 
 def validate_page_number(page_str: str | None) -> int:
@@ -122,7 +122,7 @@ def validate_page_number(page_str: str | None) -> int:
     return page
 
 
-def validate_station_name(staion_name: str) -> None:
+def validate_station_name(station_name: str) -> None:
     """
     Validates that a station name contains only allowed characters.
     Args:
@@ -131,5 +131,5 @@ def validate_station_name(staion_name: str) -> None:
         BadRequest: If the name contains characters outside of letters, spaces, dashes, apostrophes, or dots.
     """
     pattern = "^[A-Za-z\\s'-.]+$"
-    if not re.match(pattern=pattern, string=staion_name):
+    if not re.match(pattern=pattern, string=station_name):
         raise BadRequest("Provide correct name; Allowed characters: Letters, space, dash, apostrophe, dot")

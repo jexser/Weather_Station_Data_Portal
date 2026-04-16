@@ -1,4 +1,7 @@
 from typing import Final
+# import dotenv, os
+
+# dotenv.load_dotenv()
 
 FIELD_TG: Final[str] = "TG"
 FIELD_DATE: Final[str] = "DATE"
@@ -8,5 +11,6 @@ FIELD_STANAME: Final[str] = "STANAME"
 ROWS_TO_SKIP_INDEX: Final[int] = 17
 ROWS_TO_SKIP_STATION: Final[int] = 20
 
+#TODO: make env vars
 INDEX_PAGE_SIZE: Final[int] = 50 #500 for prod
 MAX_SEARCH_RESULTS: Final[int] = 5 #50 for prod

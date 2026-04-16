@@ -30,8 +30,8 @@ def get_stations_index_page(page_str: str | None = "1") -> dict:
 
     payload = {
         "data": paginated.to_dict(orient="records"),
-        "total": lotal_records,
-        "page": page_str,
+        "items": lotal_records,
+        "page": page,
         "page_size": constants.INDEX_PAGE_SIZE,
         "has_next": has_next
     }
@@ -106,21 +106,22 @@ def find_stations_by_name(station_name: str) -> dict:
     Raises:
         BadRequest: If station_name contains invalid characters.
     """
-    validators.validate_station_name(staion_name=station_name)
+    validators.validate_station_name(station_name=station_name)
 
-    df = station_repo.load_station_index()
-    df[constants.FIELD_STANAME] = df[constants.FIELD_STANAME].str.capitalize()
-    search_result = df.loc[df[constants.FIELD_STANAME].str.contains(station_name.capitalize())].to_dict(orient="records")
-    search_result_records = len(search_result)
+    df = station_repo.load_station_index().copy()
+    search_result = df.loc[df[constants.FIELD_STANAME].str.contains(station_name, case=False)].to_dict(orient="records")
+    items = len(search_result)
 
-    if search_result_records == 0:
+    if items == 0:
         search_result = "No stations found"
-    elif search_result_records > constants.MAX_SEARCH_RESULTS:
-        search_result = search_result[0:50]
+    elif items > constants.MAX_SEARCH_RESULTS:
+        search_result = search_result[0:constants.MAX_SEARCH_RESULTS]
+        items = len(search_result)
 
     payload = {
         "data": search_result,
-        "search_word": station_name,
-        "search_results": len(search_result)
+        "search_query": station_name,
+        "items": items,
+        "has_next": False
     }
     return payload
