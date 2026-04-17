@@ -19,16 +19,17 @@ The project has two parts:
 ├── logs/                       # Rotating log output
 ├── repositories/
 │   └── station_repository.py   # File I/O; LRU-cached data loading
+├── routes/
+│   ├── api.py                  # JSON API endpoints (Blueprint: api_bp)
+│   └── ui.py                   # HTML UI route (Blueprint: ui_bp)
 ├── services/
 │   └── station_service.py      # Business logic: pagination, search, filtering
 ├── templates/
 │   ├── home.html               # Station browser UI
 │   └── macros.html             # Shared Jinja2 macros (pagination)
-├── routes/
-│   └── api.py                  # Placeholder for future route modules
+├── app.py                      # App init, logging, blueprint registration, entry point
 ├── constants.py                # Field names and config constants
 ├── errors.py                   # APIError hierarchy and JSON serializer
-├── main.py                     # App init, logging, route handlers
 ├── validators.py               # Input validation (raises 400/404 on failure)
 └── requirements.txt
 ```
@@ -38,13 +39,13 @@ The project has two parts:
 Requests flow through three layers:
 
 ```
-Route handler (main.py)
+Route handlers (routes/api.py, routes/ui.py)
   → Service layer (services/station_service.py)
     → Repository layer (repositories/station_repository.py)
       → Flat files (data/)
 ```
 
-The repository's `_load_and_clean_data()` is LRU-cached by file path, so repeated requests for the same station avoid redundant disk reads. It handles header skipping, whitespace stripping, TG scaling (÷10 → °C), and `-9999` → `null` replacement.
+Routes are organised as Flask Blueprints (`api_bp`, `ui_bp`) and registered in `app.py`. The repository's `_load_and_clean_data()` is LRU-cached by file path, so repeated requests for the same station avoid redundant disk reads. It handles header skipping, whitespace stripping, TG scaling (÷10 → °C), and `-9999` → `null` replacement.
 
 ## API Endpoints
 
@@ -62,6 +63,7 @@ Returns a paginated list of stations (500 per page; page defaults to 1).
   "items": 97,
   "page": 1,
   "page_size": 500,
+  "total_pages": 1,
   "has_next": false
 }
 ```
@@ -142,7 +144,7 @@ Debug=True
 ### Running
 
 ```bash
-python main.py
+python app.py
 ```
 
 Runs on `http://127.0.0.1:5000`.
