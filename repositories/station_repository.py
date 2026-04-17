@@ -156,7 +156,7 @@ def search_stations_by_name(query: str) -> list[dict]:
     """
     df = _load_station_index()
     search_results = df.loc[
-        df[constants.FIELD_STANAME].str.contains(query, case=False, na=False)
+        df[constants.FIELD_STANAME].str.contains(query, case=False, na=False, regex=False)
     ]
 
     return search_results.to_dict(orient="records")

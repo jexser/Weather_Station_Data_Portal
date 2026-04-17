@@ -1,8 +1,8 @@
 from errors import BadRequest, NotFound
 from typing import Any
-import re, os, datetime, logging, pandas
+import re, datetime, logging, pandas
 from pathlib import Path
-
+import constants
 
 def validate_station_id(stationid: str) -> None:
     """
@@ -12,7 +12,7 @@ def validate_station_id(stationid: str) -> None:
     Raises:
         BadRequest: If the station ID format is invalid.
     """
-    if not re.match(r"^\d{1,6}$", stationid):
+    if not constants.PATTERN_STATION_ID.fullmatch(stationid):
         logging.warning(f"Invalid station ID format: {stationid}")
         raise BadRequest("Invalid station ID format. Please provide a valid station ID.")
 
@@ -25,7 +25,7 @@ def validate_file_existence(file_path: Path) -> None:
     Raises:
         NotFound: If the file does not exist.
     """
-    if not os.path.exists(path=file_path):
+    if not file_path.exists():
         logging.warning(f"File not found at path: {file_path}")
         raise NotFound("Station data not found.")
 
@@ -42,7 +42,7 @@ def validate_date_and_year_args(date_str: str | None, year_str: str | None) -> N
     """
     if (date_str) and (year_str):
         logging.warning("Both 'year' and 'date' query parameters provided: %s, %s", date_str, year_str)
-        raise BadRequest("Please provide only one query parameter: either 'year' or 'date', not both.")
+        raise BadRequest("Please provide one query parameter: either 'year' or 'date'")
     if (not date_str) and (not year_str):
         logging.warning("Neither 'year' or 'date' query parameters provided")
         raise BadRequest("Please provide one query parameter: either 'year' or 'date'")
@@ -62,7 +62,7 @@ def validate_date_format(date_str: str) -> datetime.datetime:
         return datetime.datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
         logging.warning(f"Invalid date format: {date_str}")
-        raise BadRequest("Invalid date. Please provide a valid calendar date in the format YYYY-MM-DD.")
+        raise BadRequest("Invalid date, please provide a valid calendar date in the format YYYY-MM-DD")
 
 
 def validate_year_format(year_str: str) -> None:
@@ -73,9 +73,9 @@ def validate_year_format(year_str: str) -> None:
     Raises:
         BadRequest: If the year format is invalid.
     """
-    if not re.match(r"^\d{4}$", year_str):
+    if not constants.PATTERN_YEAR.fullmatch(year_str):
         logging.warning(f"Invalid year format: {year_str}")
-        raise BadRequest("Invalid year format. Please provide a 4-digit year.")
+        raise BadRequest("Invalid year format, please provide a 4-digit year")
 
 
 def validate_temperature_data(temperature_series: Any) -> float:
@@ -96,7 +96,7 @@ def validate_temperature_data(temperature_series: Any) -> float:
         return temperature
     except (ValueError, TypeError):
         logging.warning(f"Invalid temperature data: {temperature_series}")
-        raise NotFound("No temperature data found.")
+        raise NotFound("No temperature data found")
     
 
 def validate_page_number(page_str: str | None) -> int:
@@ -115,10 +115,10 @@ def validate_page_number(page_str: str | None) -> int:
     try:
         page = int(page_str)
     except ValueError:
-        raise BadRequest("Page must be integer")
+        raise BadRequest("Page must be integer and >= 1")
     
     if page < 1:
-        raise BadRequest("Page must be >= 1")
+        raise BadRequest("Page must be integer and >= 1")
     
     return page
 
@@ -131,6 +131,5 @@ def validate_station_name(station_name: str) -> None:
     Raises:
         BadRequest: If the name contains characters outside of letters, spaces, dashes, apostrophes, or dots.
     """
-    pattern = "^[A-Za-z\\s'-.]+$"
-    if not re.match(pattern=pattern, string=station_name):
+    if not constants.PATTERN_STATION_NAME.fullmatch(station_name):
         raise BadRequest("Provide correct name; Allowed characters: Letters, space, dash, apostrophe, dot")
