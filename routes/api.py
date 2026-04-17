@@ -25,11 +25,11 @@ def get_station_by(stationid: str):
     year_str = request.args.get("year")
     date_str = request.args.get("date")
 
-    results = station_service.get_by_date_or_year(stationid, date_str, year_str)
-    items = len(results)
+    station_data = station_service.get_by_date_or_year(stationid, date_str, year_str)
+    items = len(station_data)
     
     return jsonify({
-        "data": station_service.get_by_date_or_year(stationid, date_str, year_str),
+        "data": station_data,
         "items": items
     })
 
