@@ -1,6 +1,7 @@
 from errors import BadRequest, NotFound
 from typing import Any
 import re, os, datetime, logging, pandas
+from pathlib import Path
 
 
 def validate_station_id(stationid: str) -> None:
@@ -16,7 +17,7 @@ def validate_station_id(stationid: str) -> None:
         raise BadRequest("Invalid station ID format. Please provide a valid station ID.")
 
 
-def validate_file_existence(file_path: str) -> None:
+def validate_file_existence(file_path: Path) -> None:
     """
     Checks if the specified file exists. If it does not exist, raises a NotFound error.
     Args:

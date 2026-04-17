@@ -45,7 +45,7 @@ def load_station_index() -> pd.DataFrame:
     Raises:
         InternalServerError: If the stations index file is not found on disk.
     """
-    index_file_path = os.path.join(os.getcwd(), "data", "stations.txt")
+    index_file_path = constants.DATA_DIR / "stations.txt"
     if not os.path.exists(path=index_file_path):
         logging.critical(f"Stations index file not found at path: {index_file_path}")
         raise InternalServerError("Stations index data not found.")
@@ -70,7 +70,8 @@ def load_station(stationid: str) -> pd.DataFrame:
         NotFound: If no data file exists for the given station ID.
     """
     validators.validate_station_id(stationid)
-    station_file_path = os.path.join(os.getcwd(), "data", f"TG_STAID{stationid.zfill(6)}.txt")
+    # station_file_path = os.path.join(os.getcwd(), "data", f"TG_STAID{stationid.zfill(6)}.txt")
+    station_file_path = constants.DATA_DIR / f"TG_STAID{stationid.zfill(6)}.txt"
     validators.validate_file_existence(station_file_path)
 
     return _load_and_clean_data(file_path=station_file_path, 
