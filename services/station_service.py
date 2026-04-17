@@ -1,5 +1,6 @@
 import errors, validators, constants, repositories.station_repository as station_repo
 import pandas as pd
+import math
 
 
 def get_stations_index_page(page_str: str | None = "1") -> dict:
@@ -15,17 +16,19 @@ def get_stations_index_page(page_str: str | None = "1") -> dict:
     """
     page = validators.validate_page_number(page_str)
     stations = station_repo.load_station_index()
-    lotal_records = len(stations)
+    total_records = len(stations)
     paginated = _paginate_index(stations, page=page, page_size=constants.INDEX_PAGE_SIZE)
 
-    remainder = lotal_records - (page * constants.INDEX_PAGE_SIZE)
+    remainder = total_records - (page * constants.INDEX_PAGE_SIZE)
+    total_pages = total_pages = math.ceil(total_records / constants.INDEX_PAGE_SIZE)
     has_next: bool = remainder > 0 
 
     payload = {
         "data": paginated.to_dict(orient="records"),
-        "items": lotal_records,
+        "items": total_records,
         "page": page,
         "page_size": constants.INDEX_PAGE_SIZE,
+        "total_pages": total_pages,
         "has_next": has_next
     }
     return payload
