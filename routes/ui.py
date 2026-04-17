@@ -1,7 +1,6 @@
 from flask import Blueprint, request, render_template
 import services.station_service as station_service
 import constants
-import os
 
 ui_bp = Blueprint("ui", __name__)
 

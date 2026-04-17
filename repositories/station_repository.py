@@ -37,7 +37,7 @@ def _load_and_clean_data(
     return df
 
 
-def load_station_index() -> pd.DataFrame:
+def _load_station_index() -> pd.DataFrame:
     """
     Loads the stations index file and returns a cleaned DataFrame with station IDs and names.
     Returns:
@@ -50,12 +50,25 @@ def load_station_index() -> pd.DataFrame:
         logging.critical(f"Stations index file not found at path: {index_file_path}")
         raise InternalServerError("Stations index data not found.")
         
-    stations = _load_and_clean_data(index_file_path, 
-                                    rows_to_skip=constants.ROWS_TO_SKIP_INDEX, 
-                                    parse_dates=False)
+    stations = _load_and_clean_data(
+        index_file_path, 
+        rows_to_skip=constants.ROWS_TO_SKIP_INDEX, 
+        parse_dates=False
+        )
     stations = stations[[constants.FIELD_STAID, constants.FIELD_STANAME]] #filter and leave only two fields we need to render
     stations[constants.FIELD_STANAME] = stations[constants.FIELD_STANAME].str.strip()
     return stations
+
+
+def get_station_index() -> list:
+    """
+    Returns the full station index as a list of dicts with STAID and STANAME keys.
+    Returns:
+        list: All station records from the index file.
+    Raises:
+        InternalServerError: If the stations index file is not found on disk.
+    """
+    return _load_station_index().to_dict(orient="records")
 
 
 def load_station(stationid: str) -> pd.DataFrame:
@@ -70,10 +83,30 @@ def load_station(stationid: str) -> pd.DataFrame:
         NotFound: If no data file exists for the given station ID.
     """
     validators.validate_station_id(stationid)
-    # station_file_path = os.path.join(os.getcwd(), "data", f"TG_STAID{stationid.zfill(6)}.txt")
     station_file_path = constants.DATA_DIR / f"TG_STAID{stationid.zfill(6)}.txt"
     validators.validate_file_existence(station_file_path)
 
-    return _load_and_clean_data(file_path=station_file_path, 
-                                rows_to_skip=constants.ROWS_TO_SKIP_STATION, 
-                                parse_dates=True)
+    return _load_and_clean_data(
+        file_path=station_file_path, 
+        rows_to_skip=constants.ROWS_TO_SKIP_STATION, 
+        parse_dates=True
+        )
+
+    
+def search_stations_by_name(query: str) -> list[dict]:
+    """
+    Searches the station index for stations whose names contain the given query string.
+    Args:
+        query (str): Case-insensitive substring to match against station names.
+    Returns:
+        list[dict]: Matching station records, each with STAID and STANAME keys.
+            Returns an empty list if no stations match.
+    Raises:
+        InternalServerError: If the stations index file is not found on disk.
+    """
+    df = _load_station_index()
+    search_results = df.loc[
+        df[constants.FIELD_STANAME].str.contains(query, case=False, na=False)
+    ]
+
+    return search_results.to_dict(orient="records")

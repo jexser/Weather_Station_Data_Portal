@@ -14,17 +14,17 @@ def get_stations_index_page(page_str: str | None = "1") -> dict:
     Raises:
         BadRequest: If page_str is not a valid integer or is less than 1.
     """
-    page = validators.validate_page_number(page_str)
-    stations = station_repo.load_station_index()
-    total_records = len(stations)
-    paginated = _paginate_index(stations, page=page, page_size=constants.INDEX_PAGE_SIZE)
+    page: int = validators.validate_page_number(page_str)
+    stations: list = station_repo.get_station_index()
+    total_records: int = len(stations)
+    paginated: list = _paginate_index(stations, page=page, page_size=constants.INDEX_PAGE_SIZE)
 
-    remainder = total_records - (page * constants.INDEX_PAGE_SIZE)
-    total_pages = total_pages = math.ceil(total_records / constants.INDEX_PAGE_SIZE)
+    remainder: int = total_records - (page * constants.INDEX_PAGE_SIZE)
+    total_pages: int = math.ceil(total_records / constants.INDEX_PAGE_SIZE)
     has_next: bool = remainder > 0 
 
     payload = {
-        "data": paginated.to_dict(orient="records"),
+        "data": paginated,
         "items": total_records,
         "page": page,
         "page_size": constants.INDEX_PAGE_SIZE,
@@ -34,22 +34,44 @@ def get_stations_index_page(page_str: str | None = "1") -> dict:
     return payload
 
 
-def _paginate_index(df: pd.DataFrame, page: int, page_size: int = 500) -> pd.DataFrame:
+def find_stations_by_name(station_name: str) -> dict:
     """
-    Paginates a DataFrame by returning a specific slice of rows based on the page number and page size.
+    Searches the station index for stations whose names contain the given search term.
+    Results are capped at MAX_SEARCH_RESULTS if there are too many matches.
     Args:
-        df (pd.DataFrame): The DataFrame to be paginated.
-        page (int): The current page number (1-indexed).
-        page_size (int, optional): The maximum number of records to include per page. Defaults to 500.
+        station_name (str): The search term to match against station names.
     Returns:
-        pd.DataFrame: A subset of the original DataFrame containing only the rows for the requested page.
+        dict: Contains matched station records under "data", the original search term
+            under "search_word", and the number of results under "search_results".
+            If no matches are found, "data" is the string "No stations found".
+    Raises:
+        BadRequest: If station_name contains invalid characters.
     """
-    starting_item = (page - 1) * page_size
-    ending_item = page * page_size
-    return df.iloc[starting_item:ending_item]
+    validators.validate_station_name(station_name=station_name)
+    
+    search_results = station_repo.search_stations_by_name(station_name)
+    items = len(search_results)
+
+    if items == 0:
+        search_results = "No stations found"
+    elif items > constants.MAX_SEARCH_RESULTS:
+        search_results = search_results[0:constants.MAX_SEARCH_RESULTS]
+        items = len(search_results)
+
+    payload = {
+        "data": search_results,
+        "search_query": station_name,
+        "items": items,
+        "page": 1, # Always one as per spec, no calculation needed
+        "page_size": constants.MAX_SEARCH_RESULTS,
+        "total_pages": 1, # Always one as per spec, no calculation needed
+        "has_next": False,
+    }
+
+    return payload
 
 
-def get_by_date_or_year(stationid: str, date_str: str | None, year_str: str | None) -> dict | list:
+def get_station_data_by_date_or_year(stationid: str, date_str: str | None, year_str: str | None) -> dict | list:
     """
     Returns temperature data for a station filtered by a specific date or year.
     Exactly one of date_str or year_str must be provided.
@@ -80,44 +102,23 @@ def get_by_date_or_year(stationid: str, date_str: str | None, year_str: str | No
         }
     elif year_str:
         validators.validate_year_format(year_str)
-        
         result = df.loc[df[constants.FIELD_DATE].dt.year == int(year_str)].to_dict(orient="records")
-        #if no data, it will return an empty list, which is appropriate for this case
     else:
         raise errors.BadRequest("Either date or year must be provided")
 
     return result
 
 
-def find_stations_by_name(station_name: str) -> dict:
+def _paginate_index(data: list, page: int, page_size: int = 500) -> list:
     """
-    Searches the station index for stations whose names contain the given search term.
-    Results are capped at MAX_SEARCH_RESULTS if there are too many matches.
+    Returns a page-sized slice of a list based on the page number and page size.
     Args:
-        station_name (str): The search term to match against station names.
+        data (list): The list to paginate.
+        page (int): The current page number (1-indexed).
+        page_size (int, optional): The maximum number of records per page. Defaults to 500.
     Returns:
-        dict: Contains matched station records under "data", the original search term
-            under "search_word", and the number of results under "search_results".
-            If no matches are found, "data" is the string "No stations found".
-    Raises:
-        BadRequest: If station_name contains invalid characters.
+        list: A slice of data containing only the records for the requested page.
     """
-    validators.validate_station_name(station_name=station_name)
-
-    df = station_repo.load_station_index().copy()
-    search_result = df.loc[df[constants.FIELD_STANAME].str.contains(station_name, case=False)].to_dict(orient="records")
-    items = len(search_result)
-
-    if items == 0:
-        search_result = "No stations found"
-    elif items > constants.MAX_SEARCH_RESULTS:
-        search_result = search_result[0:constants.MAX_SEARCH_RESULTS]
-        items = len(search_result)
-
-    payload = {
-        "data": search_result,
-        "search_query": station_name,
-        "items": items,
-        "has_next": False
-    }
-    return payload
+    starting_item: int = (page - 1) * page_size
+    ending_item: int = page * page_size
+    return data[starting_item:ending_item]

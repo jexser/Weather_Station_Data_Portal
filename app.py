@@ -1,11 +1,9 @@
-import services.station_service as station_service
 import os, logging
-from flask import Flask, render_template, request, jsonify, Response
-from errors import APIError, BadRequest, jsonify_error
+from flask import Flask, Response
+from errors import APIError, jsonify_error
 from logging.handlers import RotatingFileHandler
 from typing import Final
 from dotenv import load_dotenv
-import constants
 import repositories.station_repository as station_repository
 from routes.api import api_bp
 from routes.ui import ui_bp
@@ -52,5 +50,5 @@ def handle_api_error(error: APIError) -> Response:
 
 
 if __name__ == "__main__":
-    station_repository.load_station_index() #preload for caching
+    station_repository._load_station_index() #preload for caching
     app.run(debug=True if DEBUG else False)
