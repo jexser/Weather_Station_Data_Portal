@@ -1,5 +1,4 @@
 import errors, validators, constants, repositories.station_repository as station_repo
-import pandas as pd
 import math
 
 
@@ -42,7 +41,7 @@ def find_stations_by_name(station_name: str) -> dict:
         station_name (str): The search term to match against station names.
     Returns:
         dict: Contains matched station records under "data", the original search term
-            under "search_word", and the number of results under "search_results".
+            under "search_query", and the number of results under "items".
             If no matches are found, "data" is the string "No stations found".
     Raises:
         BadRequest: If station_name contains invalid characters.
@@ -87,14 +86,11 @@ def get_station_data_by_date_or_year(stationid: str, date_str: str | None, year_
         NotFound: If the station file does not exist.
     """
     validators.validate_date_and_year_args(date_str, year_str)
-    df = station_repo.load_station(stationid)
     result = {}
 
     if date_str:
         parsed_date = validators.validate_date_format(date_str)
-        temperature_series = df.loc[df[constants.FIELD_DATE] == parsed_date][constants.FIELD_TG].squeeze()
-        temperature = validators.validate_temperature_data(temperature_series)
-
+        temperature = station_repo.extract_temperature(stationid=stationid, date=parsed_date)
         result = {
             "stationid": stationid,
             "date": date_str, 
@@ -102,7 +98,7 @@ def get_station_data_by_date_or_year(stationid: str, date_str: str | None, year_
         }
     elif year_str:
         validators.validate_year_format(year_str)
-        result = df.loc[df[constants.FIELD_DATE].dt.year == int(year_str)].to_dict(orient="records")
+        result = station_repo.extract_temperature_series(stationid=stationid, year_str=year_str)
     else:
         raise errors.BadRequest("Either date or year must be provided")
 

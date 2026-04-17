@@ -1,15 +1,17 @@
 import pandas as pd
 from functools import lru_cache
+from pathlib import Path
 import constants
 import os, logging
 from errors import InternalServerError
 import validators
+import datetime
 
 
 @lru_cache(maxsize=128) # Cache results to improve performance for repeated requests
 def _load_and_clean_data(
-        file_path: str, 
-        rows_to_skip: int = 0, 
+        file_path: Path,
+        rows_to_skip: int = 0,
         parse_dates: bool = False
         ) -> pd.DataFrame:
     """
@@ -18,7 +20,7 @@ def _load_and_clean_data(
     are replaced with pd.NA and values are divided by 10 to convert from tenths of
     degrees Celsius to degrees Celsius. Dates are optionally parsed to datetime.
     Args:
-        file_path (str): The path to the CSV file to be loaded.
+        file_path (Path): The path to the CSV file to be loaded.
         rows_to_skip (int): The number of header rows to skip. Default is 0.
         parse_dates (bool): Whether to parse the DATE column to datetime. Default is False.
     Returns:
@@ -71,7 +73,7 @@ def get_station_index() -> list:
     return _load_station_index().to_dict(orient="records")
 
 
-def load_station(stationid: str) -> pd.DataFrame:
+def _load_station(stationid: str) -> pd.DataFrame:
     """
     Loads a station's temperature data file and returns a cleaned DataFrame.
     Args:
@@ -91,6 +93,54 @@ def load_station(stationid: str) -> pd.DataFrame:
         rows_to_skip=constants.ROWS_TO_SKIP_STATION, 
         parse_dates=True
         )
+
+
+def get_station(stationid: str) -> list:
+    """
+    Returns all daily records for a station as a list of dicts.
+    Args:
+        stationid (str): The station ID (e.g. "1" resolves to TG_STAID000001.txt).
+    Returns:
+        list: All records with DATE (datetime) and TG (°C) keys.
+    Raises:
+        BadRequest: If the station ID format is invalid.
+        NotFound: If no data file exists for the given station ID.
+    """
+    return _load_station(stationid=stationid).to_dict(orient="records")
+
+def extract_temperature(stationid: str, date: datetime.datetime) -> float:
+    """
+    Returns the temperature for a station on a specific date.
+    Args:
+        stationid (str): The station ID to query.
+        date (datetime.datetime): The exact date to look up.
+    Returns:
+        float: Temperature in degrees Celsius for the given date.
+    Raises:
+        BadRequest: If the station ID format is invalid or temperature data is missing/invalid.
+        NotFound: If no data file exists for the given station ID.
+    """
+    df = _load_station(stationid)
+    temperature_series = df.loc[df[constants.FIELD_DATE] == date][constants.FIELD_TG].squeeze()
+    temperature = validators.validate_temperature_data(temperature_series)
+    return temperature
+
+def extract_temperature_series(stationid: str, year_str: str) -> list[dict]:
+    """
+    Returns all daily records for a station in a given year.
+    Args:
+        stationid (str): The station ID to query.
+        year_str (str): The year to filter by in YYYY format.
+    Returns:
+        list[dict]: Daily records for the year, each with DATE (datetime) and TG (°C) keys.
+            Returns an empty list if no data exists for that year.
+    Raises:
+        BadRequest: If the station ID format is invalid.
+        NotFound: If no data file exists for the given station ID.
+    """
+    df = _load_station(stationid)
+    station_data = df.loc[df[constants.FIELD_DATE].dt.year == int(year_str)].to_dict(orient="records")
+    return station_data
 
     
 def search_stations_by_name(query: str) -> list[dict]:
