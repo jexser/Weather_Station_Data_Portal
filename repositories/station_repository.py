@@ -108,6 +108,7 @@ def get_station(stationid: str) -> list:
     """
     return _load_station(stationid=stationid).to_dict(orient="records")
 
+
 def extract_temperature(stationid: str, date: datetime.datetime) -> float:
     """
     Returns the temperature for a station on a specific date.
@@ -124,6 +125,7 @@ def extract_temperature(stationid: str, date: datetime.datetime) -> float:
     temperature_series = df.loc[df[constants.FIELD_DATE] == date][constants.FIELD_TG].squeeze()
     temperature = validators.validate_temperature_data(temperature_series)
     return temperature
+
 
 def extract_temperature_series(stationid: str, year_str: str) -> list[dict]:
     """

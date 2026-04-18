@@ -22,4 +22,4 @@ DATA_DIR: Final[Path] = BASE_PATH / "data"
 
 PATTERN_STATION_ID: Final[re.Pattern] = re.compile(r"^\d{1,6}$") # 1–6 digit station ID
 PATTERN_YEAR: Final[re.Pattern] = re.compile(r"^\d{4}$") # 4 digit year
-PATTERN_STATION_NAME: Final[re.Pattern] = re.compile(r"^[A-Za-z\s'.-]+$") # Station name with letters, space, dash, apostrophe, dot   
+PATTERN_STATION_NAME: Final[re.Pattern] = re.compile(r"^[A-Za-z\s'.-]+$") # Station name with letters, space, dash, apostrophe, dot
