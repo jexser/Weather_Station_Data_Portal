@@ -51,11 +51,8 @@ def find_stations_by_name(station_name: str) -> dict:
     search_results = station_repo.search_stations_by_name(station_name)
     items = len(search_results)
 
-    if items == 0:
-        search_results = "No stations found"
-    elif items > constants.MAX_SEARCH_RESULTS:
-        search_results = search_results[0:constants.MAX_SEARCH_RESULTS]
-        items = len(search_results)
+    search_results = search_results[0:constants.MAX_SEARCH_RESULTS]
+    items = len(search_results)
 
     payload = {
         "data": search_results,

@@ -12,7 +12,7 @@ def home():
 
     if station_name:
         stations = station_service.find_stations_by_name(station_name)
-        data = stations["data"]
+        data: list = stations["data"]
     else:
         stations = station_service.get_stations_index_page(page_str=page_str)
         data: list = stations["data"]
@@ -22,7 +22,7 @@ def home():
 
     return render_template(
         "home.html",
-        data=data, 
+        data=data if len(data) != 0 else "No stations found", 
         page=int(page_str),
         has_next=has_next,
         page_size=constants.INDEX_PAGE_SIZE,
