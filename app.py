@@ -1,12 +1,13 @@
 import os, logging
-from flask import Flask, Response
-from errors import APIError, jsonify_error
+from flask import Flask, Response, render_template
+from errors import APIError, InternalServerError, jsonify_error
 from logging.handlers import RotatingFileHandler
 from typing import Final
 from dotenv import load_dotenv
 import repositories.station_repository as station_repository
 from routes.api import api_bp
 from routes.ui import ui_bp
+from werkzeug.exceptions import HTTPException
 
 # ===================
 # APP INIT
@@ -47,6 +48,20 @@ def handle_api_error(error: APIError) -> Response:
         Response: A Flask Response object containing the JSON error message
     """
     return jsonify_error(error)
+
+
+@app.errorhandler(InternalServerError)
+def handle_internal_server_error(error: InternalServerError):
+    logging.error(f"500: {error.message}")
+    return render_template("error.html"), 500
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error: Exception):
+    if isinstance(error, HTTPException):
+        return error
+    app.logger.error("Unhandled exception: %s", error)
+    return render_template("error.html"), 500
 
 
 if __name__ == "__main__":

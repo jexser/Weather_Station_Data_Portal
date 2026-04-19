@@ -40,3 +40,8 @@ def home():
         page_size=constants.INDEX_PAGE_SIZE,
         total_pages=total_pages
     )
+
+
+@ui_bp.route("/error")
+def internal_error():
+    return render_template("error.html")
