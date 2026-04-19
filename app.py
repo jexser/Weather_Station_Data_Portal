@@ -1,5 +1,5 @@
 import os, logging
-from flask import Flask, Response, render_template
+from flask import Flask, render_template
 from errors import APIError, InternalServerError, jsonify_error
 from logging.handlers import RotatingFileHandler
 from typing import Final
@@ -39,21 +39,11 @@ app.register_blueprint(ui_bp)
 
 
 @app.errorhandler(APIError)
-def handle_api_error(error: APIError) -> Response:
-    """
-    Handles APIError exceptions and returns a JSON response with the error details.
-    Args:
-        error (APIError): The APIError exception that was raised
-    Returns:
-        Response: A Flask Response object containing the JSON error message
-    """
+def handle_api_error(error: APIError):
+    if isinstance(error, InternalServerError):
+        logging.error(f"500: {error.message}")
+        return render_template("error.html"), 500
     return jsonify_error(error)
-
-
-@app.errorhandler(InternalServerError)
-def handle_internal_server_error(error: InternalServerError):
-    logging.error(f"500: {error.message}")
-    return render_template("error.html"), 500
 
 
 @app.errorhandler(Exception)
