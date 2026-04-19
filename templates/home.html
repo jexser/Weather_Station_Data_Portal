@@ -17,21 +17,21 @@
     </div>
     <br>
     <hr>
-    {% if data!= "No stations found" %}
+    {% if not no_results %}
         <h2>Available stations</h2>
         <p>
             <table border="1">
                 <thead>
                     <tr>
-                        <th>STAID</th>
-                        <th>STANAME</th>
+                        <th>ID</th>
+                        <th>Station Name</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for station in data %}
                     <tr>
-                        <td>{{ station['STAID'] }}</td>
-                        <td>{{ station['STANAME'] }}</td>
+                        <td>{{ station['id'] }}</td>
+                        <td>{{ station['name'] }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

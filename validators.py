@@ -132,4 +132,5 @@ def validate_station_name(station_name: str) -> None:
         BadRequest: If the name contains characters outside of letters, spaces, dashes, apostrophes, or dots.
     """
     if not constants.PATTERN_STATION_NAME.fullmatch(station_name):
+        logging.warning(f"Incorrect station name requested: {station_name}")
         raise BadRequest("Provide correct name; Allowed characters: Letters, space, dash, apostrophe, dot")
