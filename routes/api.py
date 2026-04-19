@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 import services.station_service as station_service
 from errors import BadRequest
-from models import DailyTemperatureRecord, StationRecord
+from models import DailyTemperatureRecord, StationRecord, StationYearlyResult
 
 api_bp = Blueprint("api", __name__)
 
@@ -42,9 +42,9 @@ def get_station_by(stationid: str):
 
     result = station_service.get_station_data_by_date_or_year(stationid, date_str, year_str)
 
-    if isinstance(result, list):
-        data = [_serialize_daily_temperature(record) for record in result]
-        items = len(data)
+    if isinstance(result, StationYearlyResult):
+        data = [_serialize_daily_temperature(record) for record in result.records]
+        items = len(result.records)
     else:
         data = {
             "stationid": result.station_id,

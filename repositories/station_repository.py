@@ -59,8 +59,8 @@ def _load_station_index() -> pd.DataFrame:
 
 def _to_station_record(row: pd.Series) -> StationRecord:
     return StationRecord(
-        station_id=str(row[constants.FIELD_STAID]).zfill(6),
-        station_name=str(row[constants.FIELD_STANAME]).strip(),
+        station_id=str(row[constants.FIELD_STAID]),
+        station_name=str(row[constants.FIELD_STANAME]),
     )
 
 

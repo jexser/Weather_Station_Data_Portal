@@ -14,7 +14,7 @@ ROWS_TO_SKIP_STATION: Final[int] = 20
 
 #TODO: make env vars
 INDEX_PAGE_SIZE: Final[int] = 30 #500 for prod
-MAX_SEARCH_RESULTS: Final[int] = 10 #50 for prod
+SEARCH_RESULTS_LIMIT: Final[int] = 10 #50 for prod
 
 BASE_PATH: Final[Path] = Path(__file__).resolve().parent
 DATA_DIR: Final[Path] = BASE_PATH / "data"

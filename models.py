@@ -15,7 +15,7 @@ class DailyTemperatureRecord:
 
 @dataclass(frozen=True)
 class PaginatedStations:
-    stations: list[StationRecord]
+    stations: tuple[StationRecord, ...]
     page: int
     page_size: int
     total_items: int
@@ -26,7 +26,7 @@ class PaginatedStations:
 @dataclass(frozen=True)
 class StationSearchResult:
     query: str
-    stations: list[StationRecord]
+    stations: tuple[StationRecord, ...]
     limit: int
 
 
@@ -35,3 +35,10 @@ class StationTemperatureResult:
     station_id: str
     date: str
     temperature: float
+
+
+@dataclass(frozen=True)
+class StationYearlyResult:
+    station_id: str
+    year: str
+    records: tuple[DailyTemperatureRecord, ...]

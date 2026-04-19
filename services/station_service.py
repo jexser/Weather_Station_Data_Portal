@@ -8,6 +8,7 @@ from models import (
     PaginatedStations,
     StationSearchResult,
     StationTemperatureResult,
+    StationYearlyResult,
 )
 
 
@@ -28,7 +29,7 @@ def get_stations_index_page(page_str: str | None = "1") -> PaginatedStations:
     has_next = page < total_pages
 
     return PaginatedStations(
-        stations=paginated_stations,
+        stations=tuple(paginated_stations),
         page=page,
         page_size=constants.INDEX_PAGE_SIZE,
         total_items=total_items,
@@ -44,12 +45,12 @@ def find_stations_by_name(station_name: str) -> StationSearchResult:
     validators.validate_station_name(station_name=station_name)
 
     search_results = station_repo.search_stations_by_name(station_name)
-    limited_results = search_results[: constants.MAX_SEARCH_RESULTS]
+    limited_results = search_results[: constants.SEARCH_RESULTS_LIMIT]
 
     return StationSearchResult(
         query=station_name,
-        stations=limited_results,
-        limit=constants.MAX_SEARCH_RESULTS,
+        stations=tuple(limited_results),
+        limit=constants.SEARCH_RESULTS_LIMIT,
     )
 
 
@@ -57,7 +58,7 @@ def get_station_data_by_date_or_year(
     stationid: str,
     date_str: str | None,
     year_str: str | None,
-) -> StationTemperatureResult | list:
+) -> StationTemperatureResult | StationYearlyResult:
     """
     Returns temperature data for a station filtered by a specific date or year.
     """
@@ -67,14 +68,19 @@ def get_station_data_by_date_or_year(
         parsed_date = validators.validate_date_format(date_str)
         temperature = station_repo.extract_temperature(stationid=stationid, date=parsed_date)
         return StationTemperatureResult(
-            station_id=stationid.zfill(6),
+            station_id=stationid,
             date=date_str,
             temperature=temperature,
         )
 
     if year_str:
         validators.validate_year_format(year_str)
-        return station_repo.extract_temperature_series(stationid=stationid, year_str=year_str)
+        records = station_repo.extract_temperature_series(stationid=stationid, year_str=year_str)
+        return StationYearlyResult(
+            station_id=stationid,
+            year=year_str,
+            records=tuple(records),
+        )
 
     raise errors.BadRequest("Either date or year must be provided")
 
