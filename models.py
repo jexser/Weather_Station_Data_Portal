@@ -1,0 +1,37 @@
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class StationRecord:
+    station_id: str
+    station_name: str
+
+
+@dataclass(frozen=True)
+class DailyTemperatureRecord:
+    date: str
+    temperature: float | None
+
+
+@dataclass(frozen=True)
+class PaginatedStations:
+    stations: list[StationRecord]
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+    has_next: bool
+
+
+@dataclass(frozen=True)
+class StationSearchResult:
+    query: str
+    stations: list[StationRecord]
+    limit: int
+
+
+@dataclass(frozen=True)
+class StationTemperatureResult:
+    station_id: str
+    date: str
+    temperature: float
