@@ -1,9 +1,8 @@
 from typing import Final
 from pathlib import Path
 import re
-# import dotenv, os
+import dotenv, os
 
-# dotenv.load_dotenv()
 
 FIELD_TG: Final[str] = "TG"
 FIELD_DATE: Final[str] = "DATE"

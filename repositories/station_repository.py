@@ -95,20 +95,6 @@ def _load_station(stationid: str) -> pd.DataFrame:
         )
 
 
-def get_station(stationid: str) -> list:
-    """
-    Returns all daily records for a station as a list of dicts.
-    Args:
-        stationid (str): The station ID (e.g. "1" resolves to TG_STAID000001.txt).
-    Returns:
-        list: All records with DATE (datetime) and TG (°C) keys.
-    Raises:
-        BadRequest: If the station ID format is invalid.
-        NotFound: If no data file exists for the given station ID.
-    """
-    return _load_station(stationid=stationid).to_dict(orient="records")
-
-
 def extract_temperature(stationid: str, date: datetime.datetime) -> float:
     """
     Returns the temperature for a station on a specific date.
