@@ -8,7 +8,7 @@ import pandas as pd
 
 import constants
 import validators
-from errors import InternalServerError
+from errors import InternalServerError, NotFound
 from models import DailyTemperatureRecord, StationRecord
 
 
@@ -120,3 +120,38 @@ def search_stations_by_name(query: str) -> list[StationRecord]:
         df[constants.FIELD_STANAME].str.contains(query, case=False, na=False, regex=False)
     ]
     return [_to_station_record(row) for _, row in search_results.iterrows()]
+
+
+def find_hottest_year(stationid: str):
+    df = _load_station(stationid=stationid).copy()
+    year_avg = df.groupby(df[constants.FIELD_DATE].dt.year)[constants.FIELD_TG].mean()
+    return year_avg.idxmax()
+
+
+def find_coldest_year(stationid: str):
+    df = _load_station(stationid=stationid).copy()
+    year_avg = df.groupby(df[constants.FIELD_DATE].dt.year)[constants.FIELD_TG].mean()
+    return year_avg.idxmin()
+
+
+def find_hottest_day(stationid: str):
+    df = _load_station(stationid=stationid).copy()
+    return df.loc[df[constants.FIELD_TG] == df[constants.FIELD_TG].max()][constants.FIELD_DATE].squeeze()
+
+
+def find_coldest_day(stationid: str):
+    df = _load_station(stationid=stationid).copy()
+    return df.loc[df[constants.FIELD_TG] == df[constants.FIELD_TG].min()][constants.FIELD_DATE].squeeze()
+
+
+def find_avg_for_date(stationid: str, date_mm_dd: str | None):
+    df = _load_station(stationid=stationid).copy()
+    
+    filtered = df[
+        df[constants.FIELD_DATE].dt.strftime("%m-%d") == date_mm_dd
+    ]
+
+    if filtered.empty:
+        raise NotFound("No data for given date")
+
+    avg = filtered[constants.FIELD_TG].mean()

@@ -8,6 +8,12 @@ class StationRecord:
 
 
 @dataclass(frozen=True)
+class YearlyTemperatureRecord:
+    year: int
+    temperature: float | None
+
+
+@dataclass(frozen=True)
 class DailyTemperatureRecord:
     date: str
     temperature: float | None

@@ -10,6 +10,18 @@ from models import (
     StationTemperatureResult,
     StationYearlyResult,
 )
+import services.handlers as handlers
+
+
+INSIGHT_HANDLERS = {
+    "hottest_year": handlers._get_hottest_year,
+    "coldest_year": handlers._get_coldest_year,
+    "hottest_day": handlers._get_hottest_day,
+    "coldest_day": handlers._get_coldest_day,
+    "avg_for_date": handlers._get_avg_for_date,
+    "temp_variability": handlers._get_temp_variability,
+    "missing_data_count": handlers._get_missing_data_count,
+    }
 
 
 def get_stations_index_page(page_str: str | None = "1") -> PaginatedStations:
@@ -92,3 +104,20 @@ def _paginate_index(data: list, page: int, page_size: int = 500) -> list:
     starting_item = (page - 1) * page_size
     ending_item = page * page_size
     return data[starting_item:ending_item]
+
+
+def insight_station(stationid: str, insight_type: str, date: str | None):
+    # "hottest_year"
+    # "coldest_year"
+    # "hottest_day"
+    # "coldest_day"
+    # "avg_for_date"
+    # "temp_variability"
+    # "missing_data_count"
+
+    handler = INSIGHT_HANDLERS.get(insight_type)
+
+    if not handler:
+        raise errors.BadRequest("Invalid insight type")
+
+    return handler(stationid, date)
