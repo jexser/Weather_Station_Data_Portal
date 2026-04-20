@@ -134,24 +134,45 @@ def find_coldest_year(stationid: str):
     return year_avg.idxmin()
 
 
+# TODO: translate into model, add temp value
 def find_hottest_day(stationid: str):
     df = _load_station(stationid=stationid).copy()
     return df.loc[df[constants.FIELD_TG] == df[constants.FIELD_TG].max()][constants.FIELD_DATE].squeeze()
 
 
+# TODO: translate into model, add temp value
 def find_coldest_day(stationid: str):
     df = _load_station(stationid=stationid).copy()
     return df.loc[df[constants.FIELD_TG] == df[constants.FIELD_TG].min()][constants.FIELD_DATE].squeeze()
 
 
-def find_avg_for_date(stationid: str, date_mm_dd: str | None):
+def find_avg_for_date(stationid: str, date_mm_dd: str | None) -> float:
     df = _load_station(stationid=stationid).copy()
     
     filtered = df[
         df[constants.FIELD_DATE].dt.strftime("%m-%d") == date_mm_dd
     ]
-
     if filtered.empty:
         raise NotFound("No data for given date")
 
     avg = filtered[constants.FIELD_TG].mean()
+    return avg
+
+
+def find_std_for_date(stationid: str, date_mm_dd: str | None) -> float:
+    df = _load_station(stationid=stationid).copy()
+    
+    filtered = df[
+        df[constants.FIELD_DATE].dt.strftime("%m-%d") == date_mm_dd
+    ]
+    if filtered.empty:
+        raise NotFound("No data for given date")
+
+    std = filtered[constants.FIELD_TG].std()
+    return std
+
+
+def find_missing_data_count(stationid: str) -> int:
+    df = _load_station(stationid=stationid).copy()
+    missing_count = df[constants.FIELD_TG].isna().sum()
+    return missing_count
