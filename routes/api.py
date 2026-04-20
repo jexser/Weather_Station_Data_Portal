@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 import services.station_service as station_service
 from errors import BadRequest
 from models import DailyTemperatureRecord, StationRecord, StationYearlyResult
+import handlers
 
 api_bp = Blueprint("api", __name__)
 
@@ -72,3 +73,31 @@ def find_station_by_name():
         })
     else:
         raise BadRequest("No value for param 'name' is provided")
+    
+
+@api_bp.route("/api/v1/insights/<stationid>")
+def insight_station(stationid: str, insight_type: str, date: str | None):
+    hottest_year = request.args.get("hottest_year")
+    coldest_year = request.args.get("coldest_year")
+    hottest_day = request.args.get("hottest_day")
+    coldest_day = request.args.get("coldest_day")
+    avg_for_date = request.args.get("avg_for_date")
+    temp_variability = request.args.get("temp_variability")
+    missing_data_count = request.args.get("missing_data_count")
+
+    INSIGHT_HANDLERS = {
+        "hottest_year": handlers._get_hottest_year,
+        "coldest_year": handlers._get_coldest_year,
+        "hottest_day": handlers._get_hottest_day,
+        "coldest_day": handlers._get_coldest_day,
+        "avg_for_date": handlers._get_avg_for_date,
+        "temp_variability": handlers._get_temp_variability,
+        "missing_data_count": handlers._get_missing_data_count,
+    }
+
+    handler = INSIGHT_HANDLERS.get(insight_type)
+
+    if not handler:
+        raise BadRequest("Invalid insight type")
+
+    return handler(stationid, date)
