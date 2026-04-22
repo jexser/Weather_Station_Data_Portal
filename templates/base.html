@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Weather Station Data Portal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+</head>
+<body>
+    <header class="page-header">
+        <a class="site-title" href="{{ url_for('ui.home_ui') }}">Weather Station Data Portal</a>
+    </header>
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
