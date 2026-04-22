@@ -2,6 +2,8 @@ from errors import BadRequest, NotFound
 import validators
 import pytest
 import pandas as pd
+from pathlib import Path
+from uuid import uuid4
 
 
 # validate_station_id(stationid: str) -> None
@@ -42,22 +44,28 @@ def test_validate_station_id_invalid_message():
 
 
 # @pytest.mark.unit
-def test_validate_file_existence_valid(tmp_path):
-    file = tmp_path / "test.txt"
+def test_validate_file_existence_valid():
+    temp_dir = Path(".pytest_tmp") / f"validate_file_existence_{uuid4().hex}"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    file = temp_dir / "test.txt"
     file.write_text("data")
     validators.validate_file_existence(file)  # should not raise
 
 
 # @pytest.mark.unit
-def test_validate_file_existence_missing(tmp_path):
-    file = tmp_path / "missing.txt"
+def test_validate_file_existence_missing():
+    temp_dir = Path(".pytest_tmp") / f"validate_file_existence_{uuid4().hex}"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    file = temp_dir / "missing.txt"
     with pytest.raises(NotFound):
         validators.validate_file_existence(file)
 
 
 # @pytest.mark.unit
-def test_validate_file_existence_message(tmp_path):
-    file = tmp_path / "missing.txt"
+def test_validate_file_existence_message():
+    temp_dir = Path(".pytest_tmp") / f"validate_file_existence_{uuid4().hex}"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    file = temp_dir / "missing.txt"
     with pytest.raises(NotFound) as exc:
         validators.validate_file_existence(file)
     assert str(exc.value) == "Station data not found."
@@ -168,6 +176,77 @@ def test_validate_year_format_invalid_message():
     with pytest.raises(BadRequest) as exc:
         validators.validate_year_format(year_str="11")
     assert str(exc.value) == "Invalid year format, please provide a 4-digit year"
+
+
+# validate_mm_dd_date_format(date_str: str) -> str
+# ================================================
+
+# @pytest.mark.unit
+@pytest.mark.parametrize("date", [
+    "2020-10-10",
+    "2-29",
+    "13-01",
+    "00-10",
+    "02-30",
+    "ab-cd",
+    "",
+])
+def test_validate_mm_dd_date_format_invalid(date):
+    with pytest.raises(BadRequest):
+        validators.validate_mm_dd_date_format(date)
+
+
+# @pytest.mark.unit
+@pytest.mark.parametrize("date", [
+    "01-01",
+    "02-29",
+    "12-31",
+])
+def test_validate_mm_dd_date_format_valid(date):
+    assert validators.validate_mm_dd_date_format(date) == date
+
+
+# @pytest.mark.unit
+def test_validate_mm_dd_date_format_invalid_message():
+    with pytest.raises(BadRequest) as exc:
+        validators.validate_mm_dd_date_format("02-30")
+    assert str(exc.value) == "Invalid date, please provide a valid calendar date in the format MM-DD"
+
+
+# validate_insight_params(insight_type: str, date_str: str | None) -> None
+# ================================================
+
+# @pytest.mark.unit
+def test_validate_insight_params_invalid_type():
+    with pytest.raises(BadRequest) as exc:
+        validators.validate_insight_params("unknown_type", None)
+    assert str(exc.value) == "Invalid insight type."
+
+
+# @pytest.mark.unit
+@pytest.mark.parametrize("insight_type", [
+    "hottest_year",
+    "coldest_year",
+    "hottest_day",
+    "coldest_day",
+    "avg_for_date",
+    "temp_variability",
+    "missing_data_count",
+])
+def test_validate_insight_params_supported_types(insight_type):
+    validators.validate_insight_params(insight_type, None)
+
+
+# @pytest.mark.unit
+def test_validate_insight_params_validates_mm_dd_for_date_dependent_types():
+    with pytest.raises(BadRequest) as exc:
+        validators.validate_insight_params("avg_for_date", "2020-01-01")
+    assert str(exc.value) == "Invalid date, please provide a valid calendar date in the format MM-DD"
+
+
+# @pytest.mark.unit
+def test_validate_insight_params_allows_valid_mm_dd_for_date_dependent_types():
+    validators.validate_insight_params("temp_variability", "07-11")
 
 
 # validate_temperature_data(temperature_series: Any) -> float

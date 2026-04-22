@@ -2,3 +2,4 @@ testpaths = [
     "tests"
 ]
 addopts = "-v --tb=short"
+basetemp = ".pytest_tmp"

@@ -8,3 +8,4 @@ CLAUDE.md
 /ven/
 *.ipynb
 /data/
+/.pytest_tmp/
