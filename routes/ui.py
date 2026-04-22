@@ -51,9 +51,13 @@ def insights_ui():
 
     if stationid:
         hottest_year = handlers._get_hottest_year(stationid, date_mm_dd=date)["data"]["year"]
+        hottest_year_temp = handlers._get_hottest_year(stationid, date_mm_dd=date)["data"]["value"]
         coldest_year = handlers._get_coldest_year(stationid, date_mm_dd=date)["data"]["year"]
+        coldest_year_temp = handlers._get_coldest_year(stationid, date_mm_dd=date)["data"]["value"]
         hottest_day = handlers._get_hottest_day(stationid, date_mm_dd=date)["data"]["date"]
+        hottest_day_temp = handlers._get_hottest_day(stationid, date_mm_dd=date)["data"]["value"]
         coldest_day = handlers._get_coldest_day(stationid, date_mm_dd=date)["data"]["date"]
+        coldest_day_temp = handlers._get_coldest_day(stationid, date_mm_dd=date)["data"]["value"]
         missing_record = std_temp = handlers._get_missing_data_count(stationid, date_mm_dd=date)["data"]["missing_count"]
         if date:
             avg_temp = handlers._get_avg_for_date(stationid, date_mm_dd=date)["data"]["avg_temp"]
@@ -64,10 +68,17 @@ def insights_ui():
 
         return render_template(
             "insights.html",
+            station_name = station_name,
+            stationid = stationid,
+            date = date,
             hottest_year = hottest_year,
+            hottest_year_temp = hottest_year_temp,
             coldest_year = coldest_year,
+            coldest_year_temp = coldest_year_temp,
             hottest_day = hottest_day,
+            hottest_day_temp = hottest_day_temp,
             coldest_day = coldest_day,
+            coldest_day_temp = coldest_day_temp,
             avg_temp = avg_temp,
             std_temp = std_temp,
             missing_records = missing_record

@@ -9,28 +9,32 @@ def _get_hottest_year(stationid: str, date_mm_dd: str | None) -> dict:
     """Returns the year with the highest mean daily temperature for the station."""
     df = station_repository._load_station(stationid=stationid).copy()
     year_avg = df.groupby(df[constants.FIELD_DATE].dt.year)[constants.FIELD_TG].mean()
-    return {"data": {"year": int(year_avg.idxmax())}}
+    max_temp_year = int(year_avg.idxmax())
+    avg_temp_for_max_year = round(float(year_avg.loc[max_temp_year]), 1)
+    return {"data": {"year": max_temp_year, "value": avg_temp_for_max_year}}
 
 
 def _get_coldest_year(stationid: str, date_mm_dd: str | None) -> dict:
     """Returns the year with the lowest mean daily temperature for the station."""
     df = station_repository._load_station(stationid=stationid).copy()
     year_avg = df.groupby(df[constants.FIELD_DATE].dt.year)[constants.FIELD_TG].mean()
-    return {"data": {"year": int(year_avg.idxmin())}}
+    min_temp_year = int(year_avg.idxmin())
+    avg_temp_for_min_year = round(float(year_avg.loc[min_temp_year]), 1)
+    return {"data": {"year": min_temp_year, "value": avg_temp_for_min_year}}
 
 
 def _get_hottest_day(stationid: str, date_mm_dd: str | None) -> dict:
     """Returns the date and temperature of the single hottest recorded day."""
     df = station_repository._load_station(stationid=stationid).copy()
     row = df.loc[df[constants.FIELD_TG] == df[constants.FIELD_TG].max()].iloc[0]
-    return {"data": {"date": row[constants.FIELD_DATE].strftime("%Y-%m-%d"), "TG": float(row[constants.FIELD_TG])}}
+    return {"data": {"date": row[constants.FIELD_DATE].strftime("%Y-%m-%d"), "value": float(row[constants.FIELD_TG])}}
 
 
 def _get_coldest_day(stationid: str, date_mm_dd: str | None) -> dict:
     """Returns the date and temperature of the single coldest recorded day."""
     df = station_repository._load_station(stationid=stationid).copy()
     row = df.loc[df[constants.FIELD_TG] == df[constants.FIELD_TG].min()].iloc[0]
-    return {"data": {"date": row[constants.FIELD_DATE].strftime("%Y-%m-%d"), "TG": float(row[constants.FIELD_TG])}}
+    return {"data": {"date": row[constants.FIELD_DATE].strftime("%Y-%m-%d"), "value": float(row[constants.FIELD_TG])}}
 
 
 def _get_avg_for_date(stationid: str, date_mm_dd: str | None) -> dict:
