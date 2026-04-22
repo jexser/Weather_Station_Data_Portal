@@ -45,8 +45,9 @@ def home_ui():
 
 @ui_bp.route("/insights")
 def insights_ui():
+    station_name = request.args.get("station_name_search")
     stationid = request.args.get("station_id")
-    date = request.args.get("date_input")
+    date = request.args.get("date")
 
     if stationid:
         hottest_year = handlers._get_hottest_year(stationid, date_mm_dd=date)["data"]["year"]
@@ -54,12 +55,12 @@ def insights_ui():
         hottest_day = handlers._get_hottest_day(stationid, date_mm_dd=date)["data"]["date"]
         coldest_day = handlers._get_coldest_day(stationid, date_mm_dd=date)["data"]["date"]
         missing_record = std_temp = handlers._get_missing_data_count(stationid, date_mm_dd=date)["data"]["missing_count"]
-        # if date:
-        #     avg_temp = handlers._get_avg_for_date(stationid, date_mm_dd=date)["data"]["avg_temp"]
-        #     std_temp = handlers._get_avg_for_date(stationid, date_mm_dd=date)["data"]["std_dev"]
-        # else:
-        #     avg_temp = ""
-        #     std_temp = ""
+        if date:
+            avg_temp = handlers._get_avg_for_date(stationid, date_mm_dd=date)["data"]["avg_temp"]
+            std_temp = handlers._get_temp_variability(stationid, date_mm_dd=date)["data"]["std_dev"]
+        else:
+            avg_temp = ""
+            std_temp = ""
 
         return render_template(
             "insights.html",
@@ -67,8 +68,8 @@ def insights_ui():
             coldest_year = coldest_year,
             hottest_day = hottest_day,
             coldest_day = coldest_day,
-            # avg_temp = avg_temp,
-            # std_temp = std_temp,
+            avg_temp = avg_temp,
+            std_temp = std_temp,
             missing_records = missing_record
         )
     else:

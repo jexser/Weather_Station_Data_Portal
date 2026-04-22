@@ -10,13 +10,13 @@
     <h1>Insights</h1>
     <form method="get" action="{{ url_for('ui.insights_ui') }}">
         <label for="station_name_search">Station: </label>
-        <input type="text" id="station_name_search" placeholder="Search station..."/>
+        <input type="text" id="station_name_search" name="station_name_search" placeholder="Search station..."/>
         <!-- TODO: refactor to remove extra field and store value in 'station_name_search' -->
-        <input type="text" id="station_id" disabled="true"> 
+        <input type="text" id="station_id" name="station_id"> 
         <div id="results" class="combo-dropdown"></div>
         <br><br>
-        <label for="date_input">Date (optional)</label>
-        <input type="text" id="date_input" placeholder="Format: dd-mm (e.g. 27-02)"/>
+        <label for="date">Date (optional)</label>
+        <input type="text" id="date" name="date" placeholder="Format: dd-mm (e.g. 27-02)"/>
         <input type="submit" id="load_insights" value="Load insights"/>
     </form>
     <hr>
@@ -24,7 +24,7 @@
     <p>Coldest year: {{ coldest_year }}</p>
     <p>Hottest day: {{ hottest_day }}</p>
     <p>Coldest day: {{ coldest_day }}</p>
-    <p>Avg Temp (07-11): {{ avg_temp}}</p>
+    <p>Avg Temp (07-11): {{ avg_temp }}</p>
     <p>Variability (std): ±{{ std_temp }}°C</p>
     <p>Missing Records: {{ missing_records }}</p>
 
