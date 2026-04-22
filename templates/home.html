@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>Weather Station Data Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 </head>
 <body>
     <h1>Weather Station Data Portal</h1>
@@ -20,7 +21,7 @@
     {% if not no_results %}
         <h2>Available stations</h2>
         <p>
-            <table border="1">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>ID</th>

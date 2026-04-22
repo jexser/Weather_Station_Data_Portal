@@ -1,3 +1,35 @@
+.data-table {
+    border-collapse: collapse;
+    min-width: 400px;
+    font-size: 0.875rem;
+}
+
+.data-table thead th {
+    background-color: #1e2a3a;
+    color: #ffffff;
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 3px solid #aaff00;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+.data-table tbody td {
+    padding: 9px 16px;
+    border-bottom: 1px solid #e4e4e4;
+    color: #2d2d2d;
+}
+
+.data-table tbody tr:nth-child(even) td {
+    background-color: #f7f7f7;
+}
+
+.data-table tbody tr:hover td {
+    background-color: #f4ffe0;
+}
+
 .combo-dropdown {
     border: 1px solid #ccc;
     max-width: 300px;
