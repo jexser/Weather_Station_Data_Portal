@@ -6,8 +6,8 @@ A Flask-based web application and RESTful API providing access to historical tem
 
 The project has two parts:
 
-1. **Web Portal** — Browse and search weather stations; view paginated station lists.
-2. **RESTful API** — Query temperature records by station, date, or year. Designed for use by both the portal UI and external consumers.
+1. **Web Portal** — Browse and search weather stations; view paginated station lists; explore statistical insights per station.
+2. **RESTful API** — Query temperature records and statistical insights by station, date, or year. Designed for use by both the portal UI and external consumers.
 
 ## Project Structure
 
@@ -21,15 +21,23 @@ The project has two parts:
 │   └── station_repository.py   # File I/O; LRU-cached data loading
 ├── routes/
 │   ├── api.py                  # JSON API endpoints (Blueprint: api_bp)
-│   └── ui.py                   # HTML UI route (Blueprint: ui_bp)
+│   └── ui.py                   # HTML UI routes (Blueprint: ui_bp)
 ├── services/
-│   └── station_service.py      # Business logic: pagination, search, filtering
+│   ├── station_service.py      # Business logic: pagination, search, filtering, insight dispatch
+│   └── handlers.py             # Statistical insight functions (hottest/coldest, avg, variability)
+├── static/
+│   ├── css/components.css      # All styles (navy + lime color scheme)
+│   └── scripts/combo-search.js # Station autocomplete for insights page
 ├── templates/
+│   ├── base.html               # Master layout
 │   ├── home.html               # Station browser UI
+│   ├── insights.html           # Statistical insights UI
+│   ├── error.html              # 500 error page
 │   └── macros.html             # Shared Jinja2 macros (pagination)
 ├── app.py                      # App init, logging, blueprint registration, entry point
 ├── constants.py                # Field names and config constants
 ├── errors.py                   # APIError hierarchy and JSON serializer
+├── models.py                   # Frozen dataclasses for all service/repo return types
 ├── validators.py               # Input validation (raises 400/404 on failure)
 └── requirements.txt
 ```
@@ -40,12 +48,12 @@ Requests flow through three layers:
 
 ```
 Route handlers (routes/api.py, routes/ui.py)
-  → Service layer (services/station_service.py)
+  → Service layer (services/station_service.py, services/handlers.py)
     → Repository layer (repositories/station_repository.py)
       → Flat files (data/)
 ```
 
-Routes are organised as Flask Blueprints (`api_bp`, `ui_bp`) and registered in `app.py`. The repository's `_load_and_clean_data()` is LRU-cached by file path, so repeated requests for the same station avoid redundant disk reads. It handles header skipping, whitespace stripping, TG scaling (÷10 → °C), and `-9999` → `null` replacement.
+Routes are organised as Flask Blueprints (`api_bp`, `ui_bp`) and registered in `app.py`. The repository's `_load_and_clean_data()` is LRU-cached by file path, so repeated requests for the same station avoid redundant disk reads. It handles header skipping, whitespace stripping, TG scaling (÷10 → °C), and `-9999` → `null` replacement. All service and repo return types are typed frozen dataclasses defined in `models.py`.
 
 ## API Endpoints
 
@@ -55,7 +63,7 @@ Routes are organised as Flask Blueprints (`api_bp`, `ui_bp`) and registered in `
 GET /api/v1/stations?page=X
 ```
 
-Returns a paginated list of stations (500 per page; page defaults to 1).
+Returns a paginated list of stations (500 per page in production; page defaults to 1).
 
 ```json
 {
@@ -74,7 +82,7 @@ Returns a paginated list of stations (500 per page; page defaults to 1).
 GET /api/v1/stations/search?name=<query>
 ```
 
-Case-insensitive partial match on station name. Returns up to 50 results.
+Case-insensitive partial match on station name. Returns up to 50 results in production.
 
 ```json
 {
@@ -105,6 +113,28 @@ GET /api/v1/station/<stationid>?year=YYYY
 
 Returns all daily records for that year. Returns `{"data": [], "items": 0}` if the station exists but has no data for that year.
 
+### Statistical insights
+
+```
+GET /api/v1/insights/<stationid>?type=<type>[&date=MM-DD]
+```
+
+Returns a statistical insight for the station. `type` is required; `date` (MM-DD) is required for `avg_for_date` and `temp_variability`.
+
+| type | date required | Response `data` keys |
+|---|---|---|
+| `hottest_year` | no | `year`, `value` |
+| `coldest_year` | no | `year`, `value` |
+| `hottest_day` | no | `date`, `value` |
+| `coldest_day` | no | `date`, `value` |
+| `avg_for_date` | yes | `avg_temp` |
+| `temp_variability` | yes | `std_dev` |
+| `missing_data_count` | no | `missing_count` |
+
+```json
+{ "data": { "year": 2019, "value": 12.4 } }
+```
+
 ### Error responses
 
 All errors use a consistent envelope:
@@ -115,7 +145,7 @@ All errors use a consistent envelope:
 
 | Status | Condition |
 |---|---|
-| 400 | Invalid station ID, bad date/year format, both `date` and `year` provided, missing required param |
+| 400 | Invalid station ID, bad date/year format, both `date` and `year` provided, missing required param, unsupported insight type |
 | 404 | Station file not found, no record for requested date |
 | 500 | Unexpected server error |
 
@@ -155,3 +185,4 @@ Runs on `http://127.0.0.1:5000`.
 - **Flask 3.x** — web framework and routing
 - **Pandas 3.x** — data loading and transformation
 - **Jinja2** — HTML templating
+- **Vanilla JS** — station autocomplete (no frontend framework)
