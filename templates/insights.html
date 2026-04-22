@@ -4,23 +4,29 @@
 <head>
     <title>Weather Station Data Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-    <style>
-
-    </style>
 </head>
 
 <body>
     <h1>Insights</h1>
-    <p>Station: <input type="text" id="station-search" placeholder="Search station..."/></p>
-    <div id="results" class="combo-dropdown"></div>
-    <p>Date (optional) | Format: dd-mm: <input type="text" id="date-input" placeholder="27-02"/></p>
-    <p><input type="submit" value="Load insights"/></p>
+    <form method="get" action="{{ url_for('ui.insights_ui') }}">
+        <label for="station_name_search">Station: </label>
+        <input type="text" id="station_name_search" placeholder="Search station..."/>
+        <!-- TODO: refactor to remove extra field and store value in 'station_name_search' -->
+        <input type="text" id="station_id" disabled="true"> 
+        <div id="results" class="combo-dropdown"></div>
+        <br><br>
+        <label for="date_input">Date (optional)</label>
+        <input type="text" id="date_input" placeholder="Format: dd-mm (e.g. 27-02)"/>
+        <input type="submit" id="load_insights" value="Load insights"/>
+    </form>
     <hr>
-    <p>Hottest year: 2019</p>
-    <p>Coldest Year: 1963</p>
-    <p>Avg Temp (07-11): 18.4°C</p>
-    <p>Variability (std): ±6.2°C</p>
-    <p>Missing Records: 12</p>
+    <p>Hottest year: {{ hottest_year }}</p>
+    <p>Coldest year: {{ coldest_year }}</p>
+    <p>Hottest day: {{ hottest_day }}</p>
+    <p>Coldest day: {{ coldest_day }}</p>
+    <p>Avg Temp (07-11): {{ avg_temp}}</p>
+    <p>Variability (std): ±{{ std_temp }}°C</p>
+    <p>Missing Records: {{ missing_records }}</p>
 
     <script src="{{ url_for('static', filename='scripts/combo-search.js') }}" defer></script>
 </body>

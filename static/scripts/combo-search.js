@@ -1,4 +1,4 @@
-const input = document.getElementById("station-search");
+const input = document.getElementById("station_name_search");
 const resultsDiv = document.getElementById("results");
 
 let timeout = null;
@@ -27,7 +27,8 @@ function renderResults(stations) {
         item.textContent = `${station.STAID} - ${station.STANAME}`;
 
         item.onclick = () => {
-            document.getElementById("station-search").value = station.STANAME;
+            document.getElementById("station_name_search").value = station.STANAME;
+            document.getElementById("station_id").value = station.STAID;
             resultsDiv.innerHTML = "";
         };
 
@@ -36,7 +37,7 @@ function renderResults(stations) {
 }
 
 document.addEventListener("click", (event) => {
-    const input = document.getElementById("station-search");
+    const input = document.getElementById("station_name_search");
     const results = document.getElementById("results");
 
     const clickedInside =
