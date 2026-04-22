@@ -21,7 +21,7 @@ def _serialize_daily_temperature(record: DailyTemperatureRecord) -> dict:
 
 
 @api_bp.route("/api/v1/stations")
-def paginated_station():
+def paginated_station_api():
     page = request.args.get("page", "1")
     result = station_service.get_stations_index_page(page_str=page)
     
@@ -36,7 +36,7 @@ def paginated_station():
 
 
 @api_bp.route("/api/v1/station/<stationid>")
-def get_station_by(stationid: str):
+def get_station_by_id_api(stationid: str):
     year_str = request.args.get("year")
     date_str = request.args.get("date")
 
@@ -60,7 +60,7 @@ def get_station_by(stationid: str):
 
 
 @api_bp.route("/api/v1/stations/search")
-def find_station_by_name():
+def find_station_by_name_api():
     name_str = request.args.get("name")
 
     if name_str:
@@ -74,4 +74,14 @@ def find_station_by_name():
         raise BadRequest("No value for param 'name' is provided")
     
 
-# @api_bp.route("/api/v1/insights/<stationid>")
+@api_bp.route("/api/v1/insights/<stationid>")
+def get_station_insight_api(stationid: str):
+    insight_type = request.args.get("type")
+    date = request.args.get("date")
+
+    if insight_type:
+        payload = station_service.get_insight_for_station(stationid, insight_type, date)
+    else:
+        raise BadRequest("Invalid insight type")
+
+    return jsonify(payload)

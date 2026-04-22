@@ -107,14 +107,6 @@ def _paginate_index(data: list, page: int, page_size: int = 500) -> list:
 
 
 def get_insight_for_station(stationid: str, insight_type: str, date: str | None):
-    # "hottest_year"
-    # "coldest_year"
-    # "hottest_day"
-    # "coldest_day"
-    # "avg_for_date"
-    # "temp_variability"
-    # "missing_data_count"
-
     handler = INSIGHT_HANDLERS.get(insight_type)
 
     if not handler:
