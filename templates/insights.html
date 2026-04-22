@@ -1,0 +1,26 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather Station Data Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <h1>Insights</h1>
+    <p>Station: <input type="text" id="station-search" placeholder="Search station..."/></p>
+    <div id="results" class="combo-dropdown"></div>
+    <p>Date (optional) | Format: dd-mm: <input type="text" id="date-input" placeholder="27-02"/></p>
+    <p><input type="submit" value="Load insights"/></p>
+    <hr>
+    <p>Hottest year: 2019</p>
+    <p>Coldest Year: 1963</p>
+    <p>Avg Temp (07-11): 18.4°C</p>
+    <p>Variability (std): ±6.2°C</p>
+    <p>Missing Records: 12</p>
+
+    <script src="{{ url_for('static', filename='scripts/combo-search.js') }}" defer></script>
+</body>

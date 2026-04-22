@@ -9,7 +9,7 @@
     <hr>
     <h2>Find station id</h2>
     <div>
-        <form method="get" action="{{ url_for('ui.home') }}">
+        <form method="get" action="{{ url_for('ui.home_ui') }}">
             <label for="station_name">Station name: </label>
             <input type="text" id="station_name" name="station_name">
             <input type="submit" id="search_button" value="Search">
@@ -36,7 +36,7 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {{ pagination(page, has_next, total_pages, 'ui.home') }}
+            {{ pagination(page, has_next, total_pages, 'ui.home_ui') }}
         </p>
     {% else %}
         <h2>No stations found</h2>

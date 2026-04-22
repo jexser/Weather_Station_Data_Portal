@@ -14,7 +14,7 @@ def _present_station_row(station: StationRecord) -> dict:
 
 
 @ui_bp.route("/")
-def home():
+def home_ui():
     page_str = request.args.get("page", "1") # default = 1
     station_name = request.args.get("station_name")
 
@@ -42,6 +42,11 @@ def home():
     )
 
 
+@ui_bp.route("/insights")
+def insights_ui():
+    return render_template("insights.html")
+
+
 @ui_bp.route("/error")
-def internal_error():
+def internal_error_ui():
     return render_template("error.html")
