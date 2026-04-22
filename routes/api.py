@@ -79,9 +79,8 @@ def get_station_insight_api(stationid: str):
     insight_type = request.args.get("type")
     date = request.args.get("date")
 
-    if insight_type:
-        payload = station_service.get_insight_for_station(stationid, insight_type, date)
-    else:
-        raise BadRequest("Invalid insight type")
+    if not insight_type:
+        raise BadRequest("Parameter 'type' is required.")
+    payload = station_service.get_insight_for_station(stationid, insight_type, date)
 
     return jsonify(payload)

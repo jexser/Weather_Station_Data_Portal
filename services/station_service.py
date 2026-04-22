@@ -106,10 +106,14 @@ def _paginate_index(data: list, page: int, page_size: int = 500) -> list:
     return data[starting_item:ending_item]
 
 
-def get_insight_for_station(stationid: str, insight_type: str, date: str | None):
+def get_insight_for_station(stationid: str, insight_type: str, date: str | None) -> dict:
+    """
+    Dispatches to the appropriate insight handler based on insight_type.
+
+    Raises BadRequest for unsupported types. Date-dependent handlers
+    (avg_for_date, temp_variability) raise BadRequest internally if date is absent.
+    """
     handler = INSIGHT_HANDLERS.get(insight_type)
-
     if not handler:
-        raise errors.BadRequest("Invalid insight type")
-
+        raise errors.BadRequest("Invalid insight type.")
     return handler(stationid, date)
