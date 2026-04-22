@@ -1,46 +1,36 @@
+{% extends "base.html" %}
 {% from "macros.html" import pagination %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Weather Station Data Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-</head>
-<body>
-    <h1>Weather Station Data Portal</h1>
-    <hr>
+
+{% block title %}Weather Station Data Portal{% endblock %}
+
+{% block content %}
     <h2>Find station id</h2>
-    <div>
-        <form method="get" action="{{ url_for('ui.home_ui') }}">
-            <label for="station_name">Station name: </label>
-            <input type="text" id="station_name" name="station_name">
-            <input type="submit" id="search_button" value="Search">
-        </form>
-    </div>
-    <br>
+    <form method="get" action="{{ url_for('ui.home_ui') }}">
+        <label for="station_name">Station name: </label>
+        <input type="text" id="station_name" name="station_name">
+        <input type="submit" id="search_button" value="Search">
+    </form>
     <hr>
     {% if not no_results %}
         <h2>Available stations</h2>
-        <p>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Station Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for station in data %}
-                    <tr>
-                        <td>{{ station['id'] }}</td>
-                        <td>{{ station['name'] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {{ pagination(page, has_next, total_pages, 'ui.home_ui') }}
-        </p>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-id">ID</th>
+                    <th>Station Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for station in data %}
+                <tr>
+                    <td>{{ station['id'] }}</td>
+                    <td>{{ station['name'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {{ pagination(page, has_next, total_pages, 'ui.home_ui') }}
     {% else %}
         <h2>No stations found</h2>
     {% endif %}
-</body>
-</html>
+{% endblock %}

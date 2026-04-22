@@ -1,18 +1,14 @@
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Weather Station Data Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-</head>
+{% block title %}Insights — Weather Station Data Portal{% endblock %}
 
-<body>
+{% block content %}
     <h1>Insights</h1>
     <form method="get" action="{{ url_for('ui.insights_ui') }}">
         <label for="station_name_search">Station: </label>
         <input type="text" id="station_name_search" name="station_name_search" placeholder="Search station..."/>
         <!-- TODO: refactor to remove extra field and store value in 'station_name_search' -->
-        <input type="text" id="station_id" name="station_id"> 
+        <input type="text" id="station_id" name="station_id">
         <div id="results" class="combo-dropdown"></div>
         <br><br>
         <label for="date">Date (optional)</label>
@@ -22,8 +18,10 @@
     <hr>
     <table class="data-table">
         <thead>
-            <th>Insight</th>
-            <th>Value</th>
+            <tr>
+                <th>Insight</th>
+                <th>Value</th>
+            </tr>
         </thead>
         <tbody>
             <tr>
@@ -43,7 +41,7 @@
                 <td>{{ coldest_day }}</td>
             </tr>
             <tr>
-                <td>Avg Temp (07-11): </td>
+                <td>Avg Temp on for date: </td>
                 <td>{{ avg_temp }} °C</td>
             </tr>
             <tr>
@@ -56,6 +54,8 @@
             </tr>
         </tbody>
     </table>
+{% endblock %}
 
+{% block scripts %}
     <script src="{{ url_for('static', filename='scripts/combo-search.js') }}" defer></script>
-</body>
+{% endblock %}
