@@ -106,7 +106,7 @@ def _paginate_index(data: list, page: int, page_size: int = 500) -> list:
     return data[starting_item:ending_item]
 
 
-def insight_station(stationid: str, insight_type: str, date: str | None):
+def get_insight_for_station(stationid: str, insight_type: str, date: str | None):
     # "hottest_year"
     # "coldest_year"
     # "hottest_day"
