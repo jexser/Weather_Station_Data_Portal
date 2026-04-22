@@ -113,7 +113,7 @@ def get_insight_for_station(stationid: str, insight_type: str, date: str | None)
     Raises BadRequest for unsupported types. Date-dependent handlers
     (avg_for_date, temp_variability) raise BadRequest internally if date is absent.
     """
-    handler = INSIGHT_HANDLERS.get(insight_type)
-    if not handler:
-        raise errors.BadRequest("Invalid insight type.")
+    validators.validate_insight_params(insight_type=insight_type, date_str=date)
+
+    handler = INSIGHT_HANDLERS[insight_type]
     return handler(stationid, date)

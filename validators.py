@@ -78,6 +78,57 @@ def validate_year_format(year_str: str) -> None:
         raise BadRequest("Invalid year format, please provide a 4-digit year")
 
 
+def validate_mm_dd_date_format(date_str: str) -> str:
+    """
+    Validates the date format for insight queries. It should be in the format MM-DD.
+    Args:
+        date_str (str): The date string to validate.
+    Returns:
+        str: The original date string if the format is valid.
+    Raises:
+        BadRequest: If the date format is invalid.
+    """
+    if not re.fullmatch(r"\d{2}-\d{2}", date_str):
+        logging.warning("Invalid MM-DD date format: %s", date_str)
+        raise BadRequest("Invalid date, please provide a valid calendar date in the format MM-DD")
+
+    try:
+        datetime.datetime.strptime(f"2000-{date_str}", "%Y-%m-%d")
+    except ValueError:
+        logging.warning("Invalid MM-DD calendar date: %s", date_str)
+        raise BadRequest("Invalid date, please provide a valid calendar date in the format MM-DD")
+
+    return date_str
+
+
+def validate_insight_params(insight_type: str, date_str: str | None) -> None:
+    """
+    Validates supported insight types and the optional MM-DD date parameter.
+    Args:
+        insight_type (str): Requested insight type.
+        date_str (str | None): Optional MM-DD date for date-dependent insights.
+    Raises:
+        BadRequest: If the insight type is unsupported or the date format is invalid.
+    """
+    supported_types = {
+        "hottest_year",
+        "coldest_year",
+        "hottest_day",
+        "coldest_day",
+        "avg_for_date",
+        "temp_variability",
+        "missing_data_count",
+    }
+    date_required_types = {"avg_for_date", "temp_variability"}
+
+    if insight_type not in supported_types:
+        logging.warning("Unsupported insight type requested: %s", insight_type)
+        raise BadRequest("Invalid insight type.")
+
+    if insight_type in date_required_types and date_str:
+        validate_mm_dd_date_format(date_str)
+
+
 def validate_temperature_data(temperature_series: Any) -> float:
     """
     Validates the temperature data. It checks if the data is empty or cannot be converted to a float.
