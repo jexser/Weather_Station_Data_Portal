@@ -22,6 +22,13 @@
         </div>
     </form>
     <hr>
+    {% if station_name %}
+    <h2>
+        Insights for {{ station_name }}
+        {% if date %}
+        on {{ date }}
+        {% endif %}
+    </h2>
     <table class="data-table">
         <thead>
             <tr>
@@ -30,14 +37,6 @@
             </tr>
         </thead>
         <tbody>
-            {% if station_name %}
-            <h2>
-                Insights for {{ station_name }}
-                {% if date %}
-                on {{ date }}
-                {% endif %}
-            </h2>
-            {% endif %}
             <tr>
                 <td>Hottest year: </td>
                 <td>{{ hottest_year }} @ {{ hottest_year_temp }} °C</td>
@@ -79,6 +78,7 @@
             </tr>
         </tbody>
     </table>
+    {% endif %}
 {% endblock %}
 
 {% block scripts %}
