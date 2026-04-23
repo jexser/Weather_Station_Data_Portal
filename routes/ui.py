@@ -53,7 +53,7 @@ def home_ui():
 
 @ui_bp.route("/insights")
 def insights_ui():
-    station_name = request.args.get("station_name_search")
+    station_name = request.args.get("station_name")
     stationid = request.args.get("station_id")
     date = request.args.get("date")
 

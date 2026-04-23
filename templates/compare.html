@@ -7,14 +7,14 @@
     <form method="get" action="{{ url_for('ui.compare_ui') }}" class="compare-form" data-compare-form>
         <div class="compare-form-grid">
             <div class="combo-search" data-station-combobox>
-                <label for="station_a_search">Station A</label>
-                <input type="text" id="station_a_search" name="station_a_search" placeholder="Search station..." data-station-input value="{{ station_a_name or '' }}"/>
+                <label for="station_a_name">Station A</label>
+                <input type="text" id="station_a_name" name="station_a_name" placeholder="Search station..." data-station-input value="{{ station_a_name or '' }}"/>
                 <input type="hidden" name="station_a_id" data-station-id value="{{ station_a_id or '' }}">
                 <div class="combo-dropdown" data-station-results></div>
             </div>
             <div class="combo-search" data-station-combobox>
-                <label for="station_b_search">Station B</label>
-                <input type="text" id="station_b_search" name="station_b_search" placeholder="Search station..." data-station-input value="{{ station_b_name or '' }}"/>
+                <label for="station_b_name">Station B</label>
+                <input type="text" id="station_b_name" name="station_b_name" placeholder="Search station..." data-station-input value="{{ station_b_name or '' }}"/>
                 <input type="hidden" name="station_b_id" data-station-id value="{{ station_b_id or '' }}">
                 <div class="combo-dropdown" data-station-results></div>
             </div>

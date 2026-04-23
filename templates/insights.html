@@ -7,8 +7,8 @@
     <form method="get" action="{{ url_for('ui.insights_ui') }}" class="insights-form">
         <div class="insights-form-grid">
             <div class="combo-search insights-station-search" data-station-combobox>
-                <label for="station_name_search">Station</label>
-                <input type="text" id="station_name_search" name="station_name_search" placeholder="Search station..." data-station-input value="{{ station_name or '' }}"/>
+                <label for="station_name">Station</label>
+                <input type="text" id="station_name" name="station_name" placeholder="Search station..." data-station-input value="{{ station_name or '' }}"/>
                 <input type="hidden" id="station_id" name="station_id" data-station-id value="{{ stationid or '' }}">
                 <div id="results" class="combo-dropdown" data-station-results></div>
             </div>
