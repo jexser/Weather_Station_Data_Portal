@@ -55,6 +55,12 @@ Route handlers (routes/api.py, routes/ui.py)
 
 Routes are organised as Flask Blueprints (`api_bp`, `ui_bp`) and registered in `app.py`. The repository's `_load_and_clean_data()` is LRU-cached by file path, so repeated requests for the same station avoid redundant disk reads. It handles header skipping, whitespace stripping, TG scaling (÷10 → °C), and `-9999` → `null` replacement. All service and repo return types are typed frozen dataclasses defined in `models.py`.
 
+### Architecture Decisions
+
+- Pandas used only in repository layer
+- Caching per station for performance
+- Dispatcher pattern for insights endpoint
+
 ## API Endpoints
 
 ### Station listing
