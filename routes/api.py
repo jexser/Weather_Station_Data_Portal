@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 import services.station_service as station_service
 from errors import BadRequest
-from models import DailyTemperatureRecord, StationRecord, StationYearlyResult
+from models import DailyTemperatureRecord, StationComparisonRecord, StationRecord, StationYearlyResult
 
 api_bp = Blueprint("api", __name__)
 
@@ -17,6 +17,14 @@ def _serialize_daily_temperature(record: DailyTemperatureRecord) -> dict:
     return {
         "date": record.date,
         "temperature": record.temperature,
+    }
+
+
+def _serialize_station_comparison(record: StationComparisonRecord) -> dict:
+    return {
+        "date": record.date,
+        "stationA": record.station_a,
+        "stationB": record.station_b,
     }
 
 
@@ -84,3 +92,31 @@ def get_station_insight_api(stationid: str):
     payload = station_service.get_insight_for_station(stationid, insight_type, date)
 
     return jsonify(payload)
+
+
+@api_bp.route("/api/v1/compare")
+def compare_stations_api():
+    station_a_id = request.args.get("stationA_id")
+    station_b_id = request.args.get("stationB_id")
+    year = request.args.get("year")
+
+    if not station_a_id:
+        raise BadRequest("Parameter 'stationA_id' is required.")
+    if not station_b_id:
+        raise BadRequest("Parameter 'stationB_id' is required.")
+    if not year:
+        raise BadRequest("Parameter 'year' is required.")
+
+    result = station_service.get_station_comparison(
+        station_a_id=station_a_id,
+        station_b_id=station_b_id,
+        year_str=year,
+    )
+
+    return jsonify({
+        "data": [_serialize_station_comparison(record) for record in result.records],
+        "items": len(result.records),
+        "stationA_id": result.station_a_id,
+        "stationB_id": result.station_b_id,
+        "year": result.year,
+    })

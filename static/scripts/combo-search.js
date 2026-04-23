@@ -1,50 +1,79 @@
-const input = document.getElementById("station_name_search");
-const resultsDiv = document.getElementById("results");
+const stationComboboxes = document.querySelectorAll("[data-station-combobox]");
 
-let timeout = null;
+stationComboboxes.forEach((combobox) => {
+    const input = combobox.querySelector("[data-station-input]");
+    const hiddenInput = combobox.querySelector("[data-station-id]");
+    const results = combobox.querySelector("[data-station-results]");
 
-input.addEventListener("input", () => {
-    clearTimeout(timeout);
+    if (!input || !hiddenInput || !results) {
+        return;
+    }
 
-    timeout = setTimeout(async () => {
-        const query = input.value;
+    let timeout = null;
 
-        if (query.length < 2) return;
+    input.addEventListener("input", () => {
+        hiddenInput.value = "";
+        clearTimeout(timeout);
 
-        const response = await fetch(`/api/v1/stations/search?name=${query}`);
-        const data = await response.json();
+        timeout = setTimeout(async () => {
+            const query = input.value.trim();
 
-        renderResults(data.data);
-    }, 300); // wait 300ms after typing stops
+            if (query.length < 2) {
+                results.innerHTML = "";
+                return;
+            }
+
+            const response = await fetch(`/api/v1/stations/search?name=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            results.innerHTML = "";
+
+            data.data.forEach((station) => {
+                const item = document.createElement("div");
+                item.classList.add("combo-item");
+                item.textContent = `${station.STAID} - ${station.STANAME}`;
+
+                item.onclick = () => {
+                    input.value = station.STANAME;
+                    hiddenInput.value = station.STAID;
+                    results.innerHTML = "";
+                    toggleSubmitButtons();
+                };
+
+                results.appendChild(item);
+            });
+        }, 300);
+
+        toggleSubmitButtons();
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!combobox.contains(event.target)) {
+            results.innerHTML = "";
+        }
+    });
 });
 
-function renderResults(stations) {
-    resultsDiv.innerHTML = "";
+const compareForm = document.querySelector("[data-compare-form]");
 
-    stations.forEach(station => {
-        const item = document.createElement("div");
-        item.classList.add("combo-item");
-        item.textContent = `${station.STAID} - ${station.STANAME}`;
+function toggleSubmitButtons() {
+    if (!compareForm) {
+        return;
+    }
 
-        item.onclick = () => {
-            document.getElementById("station_name_search").value = station.STANAME;
-            document.getElementById("station_id").value = station.STAID;
-            resultsDiv.innerHTML = "";
-        };
+    const compareButton = compareForm.querySelector("[data-compare-submit]");
+    const stationA = compareForm.querySelector('input[name="station_a_id"]');
+    const stationB = compareForm.querySelector('input[name="station_b_id"]');
+    const year = compareForm.querySelector('input[name="year"]');
 
-        resultsDiv.appendChild(item);
-    });
+    if (!compareButton || !stationA || !stationB || !year) {
+        return;
+    }
+
+    compareButton.disabled = !(stationA.value && stationB.value && year.value.trim());
 }
 
-document.addEventListener("click", (event) => {
-    const input = document.getElementById("station_name_search");
-    const results = document.getElementById("results");
-
-    const clickedInside =
-        input.contains(event.target) ||
-        results.contains(event.target);
-
-    if (!clickedInside) {
-        results.innerHTML = "";
-    }
-});
+if (compareForm) {
+    compareForm.addEventListener("input", toggleSubmitButtons);
+    toggleSubmitButtons();
+}

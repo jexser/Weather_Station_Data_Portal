@@ -48,3 +48,18 @@ class StationYearlyResult:
     station_id: str
     year: str
     records: tuple[DailyTemperatureRecord, ...]
+
+
+@dataclass(frozen=True)
+class StationComparisonRecord:
+    date: str
+    station_a: float | None
+    station_b: float | None
+
+
+@dataclass(frozen=True)
+class StationComparisonResult:
+    station_a_id: str
+    station_b_id: str
+    year: str
+    records: tuple[StationComparisonRecord, ...]

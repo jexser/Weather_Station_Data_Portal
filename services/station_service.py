@@ -1,11 +1,14 @@
+import datetime
 import math
 
 import constants
 import errors
-import repositories.station_repository as station_repo
+import repositories.station_repository as station_repository
 import validators
 from models import (
     PaginatedStations,
+    StationComparisonRecord,
+    StationComparisonResult,
     StationSearchResult,
     StationTemperatureResult,
     StationYearlyResult,
@@ -29,7 +32,7 @@ def get_stations_index_page(page_str: str | None = "1") -> PaginatedStations:
     Returns a paginated station index result using domain-oriented fields.
     """
     page = validators.validate_page_number(page_str)
-    stations = station_repo.get_station_index()
+    stations = station_repository.get_station_index()
     total_items = len(stations)
     paginated_stations = _paginate_index(
         stations,
@@ -56,7 +59,7 @@ def find_stations_by_name(station_name: str) -> StationSearchResult:
     """
     validators.validate_station_name(station_name=station_name)
 
-    search_results = station_repo.search_stations_by_name(station_name)
+    search_results = station_repository.search_stations_by_name(station_name)
     limited_results = search_results[: constants.SEARCH_RESULTS_LIMIT]
 
     return StationSearchResult(
@@ -78,7 +81,7 @@ def get_station_data_by_date_or_year(
 
     if date_str:
         parsed_date = validators.validate_date_format(date_str)
-        temperature = station_repo.extract_temperature(stationid=stationid, date=parsed_date)
+        temperature = station_repository.extract_temperature(stationid=stationid, date=parsed_date)
         return StationTemperatureResult(
             station_id=stationid,
             date=date_str,
@@ -87,7 +90,7 @@ def get_station_data_by_date_or_year(
 
     if year_str:
         validators.validate_year_format(year_str)
-        records = station_repo.extract_temperature_series(stationid=stationid, year_str=year_str)
+        records = station_repository.extract_temperature_series(stationid=stationid, year_str=year_str)
         return StationYearlyResult(
             station_id=stationid,
             year=year_str,
@@ -117,3 +120,65 @@ def get_insight_for_station(stationid: str, insight_type: str, date: str | None)
 
     handler = INSIGHT_HANDLERS[insight_type]
     return handler(stationid, date)
+
+
+def get_station_comparison(
+    station_a_id: str,
+    station_b_id: str,
+    year_str: str,
+) -> StationComparisonResult:
+    """
+    Returns a full-year date union for two stations in the given year.
+    """
+    validators.validate_station_id(station_a_id)
+    validators.validate_station_id(station_b_id)
+    validators.validate_year_format(year_str)
+
+    station_a_records = _get_station_yearly_records_or_raise(station_a_id, year_str, "stationA_id")
+    station_b_records = _get_station_yearly_records_or_raise(station_b_id, year_str, "stationB_id")
+
+    station_a_by_date = {record.date: record.temperature for record in station_a_records}
+    station_b_by_date = {record.date: record.temperature for record in station_b_records}
+
+    year = int(year_str)
+    current_date = datetime.date(year, 1, 1)
+    last_date = datetime.date(year, 12, 31)
+    comparison_rows: list[StationComparisonRecord] = []
+
+    while current_date <= last_date:
+        date_key = current_date.isoformat()
+        comparison_rows.append(
+            StationComparisonRecord(
+                date=date_key,
+                station_a=station_a_by_date.get(date_key),
+                station_b=station_b_by_date.get(date_key),
+            )
+        )
+        current_date += datetime.timedelta(days=1)
+
+    return StationComparisonResult(
+        station_a_id=station_a_id,
+        station_b_id=station_b_id,
+        year=year_str,
+        records=tuple(comparison_rows),
+    )
+
+
+def _get_station_yearly_records_or_raise(
+    station_id: str,
+    year_str: str,
+    param_name: str,
+):
+    try:
+        result = get_station_data_by_date_or_year(
+            stationid=station_id,
+            date_str=None,
+            year_str=year_str,
+        )
+    except errors.NotFound as exc:
+        raise errors.NotFound(f"Station data not found for {param_name}={station_id}.") from exc
+
+    if not isinstance(result, StationYearlyResult):
+        raise errors.InternalServerError("Unexpected comparison result type.")
+
+    return result.records

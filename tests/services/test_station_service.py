@@ -8,7 +8,7 @@ def test_get_stations_index_page_returns_domain_result(monkeypatch):
         StationRecord(station_id="000002", station_name="Kaunas"),
     ]
 
-    monkeypatch.setattr(station_service.station_repo, "get_station_index", lambda: stations)
+    monkeypatch.setattr(station_service.station_repository, "get_station_index", lambda: stations)
     monkeypatch.setattr(station_service.constants, "INDEX_PAGE_SIZE", 1)
 
     result = station_service.get_stations_index_page("2")
@@ -28,7 +28,7 @@ def test_find_stations_by_name_returns_limited_domain_result(monkeypatch):
     ]
 
     monkeypatch.setattr(
-        station_service.station_repo,
+        station_service.station_repository,
         "search_stations_by_name",
         lambda query: search_results,
     )
@@ -45,7 +45,7 @@ def test_get_station_data_by_date_or_year_returns_yearly_result(monkeypatch):
     daily_record = DailyTemperatureRecord(date="2020-01-01", temperature=-1.2)
 
     monkeypatch.setattr(
-        station_service.station_repo,
+        station_service.station_repository,
         "extract_temperature_series",
         lambda stationid, year_str: [daily_record],
     )

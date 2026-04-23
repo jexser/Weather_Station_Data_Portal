@@ -4,15 +4,22 @@
 
 {% block content %}
     <h1>Insights</h1>
-    <form method="get" action="{{ url_for('ui.insights_ui') }}">
-        <label for="station_name_search">Station: </label>
-        <input type="text" id="station_name_search" name="station_name_search" placeholder="Search station..."/>
-        <input type="hidden" id="station_id" name="station_id">
-        <div id="results" class="combo-dropdown"></div>
-        <br><br>
-        <label for="date">Date (optional)</label>
-        <input type="text" id="date" name="date" placeholder="Format: mm-dd (e.g. 02-27)"/>
-        <input type="submit" id="load_insights" value="Load insights"/>
+    <form method="get" action="{{ url_for('ui.insights_ui') }}" class="insights-form">
+        <div class="insights-form-grid">
+            <div class="combo-search insights-station-search" data-station-combobox>
+                <label for="station_name_search">Station</label>
+                <input type="text" id="station_name_search" name="station_name_search" placeholder="Search station..." data-station-input value="{{ station_name or '' }}"/>
+                <input type="hidden" id="station_id" name="station_id" data-station-id value="{{ stationid or '' }}">
+                <div id="results" class="combo-dropdown" data-station-results></div>
+            </div>
+            <div class="insights-date-field">
+                <label for="date">Date (optional)</label>
+                <input type="text" id="date" name="date" placeholder="Format: mm-dd (e.g. 02-27)" value="{{ date or '' }}"/>
+            </div>
+            <div class="insights-submit-wrap">
+                <input type="submit" id="load_insights" value="Load insights"/>
+            </div>
+        </div>
     </form>
     <hr>
     <table class="data-table">

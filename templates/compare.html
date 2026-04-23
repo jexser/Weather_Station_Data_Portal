@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Compare Stations - Weather Station Data Portal{% endblock %}
+
+{% block content %}
+    <h1>Compare Stations</h1>
+    <form method="get" action="{{ url_for('ui.compare_ui') }}" class="compare-form" data-compare-form>
+        <div class="compare-form-grid">
+            <div class="combo-search" data-station-combobox>
+                <label for="station_a_search">Station A</label>
+                <input type="text" id="station_a_search" name="station_a_search" placeholder="Search station..." data-station-input value="{{ station_a_name or '' }}"/>
+                <input type="hidden" name="station_a_id" data-station-id value="{{ station_a_id or '' }}">
+                <div class="combo-dropdown" data-station-results></div>
+            </div>
+            <div class="combo-search" data-station-combobox>
+                <label for="station_b_search">Station B</label>
+                <input type="text" id="station_b_search" name="station_b_search" placeholder="Search station..." data-station-input value="{{ station_b_name or '' }}"/>
+                <input type="hidden" name="station_b_id" data-station-id value="{{ station_b_id or '' }}">
+                <div class="combo-dropdown" data-station-results></div>
+            </div>
+            <div>
+                <label for="year">Year</label>
+                <input type="text" id="year" name="year" placeholder="YYYY" value="{{ year or '' }}"/>
+            </div>
+        </div>
+        <input type="submit" value="Compare" data-compare-submit/>
+    </form>
+    <hr>
+    {% if records %}
+        <h2>{{ station_a_name }} vs {{ station_b_name }} in {{ year }}</h2>
+        <div class="table-scroll">
+            <table class="data-table compare-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>{{ station_a_name }}</th>
+                        <th>{{ station_b_name }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.date }}</td>
+                        <td>{% if record.station_a is not none %}{{ "%.1f"|format(record.station_a) }} &deg;C{% else %}NULL{% endif %}</td>
+                        <td>{% if record.station_b is not none %}{{ "%.1f"|format(record.station_b) }} &deg;C{% else %}NULL{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='scripts/combo-search.js') }}" defer></script>
+{% endblock %}
