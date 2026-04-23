@@ -57,6 +57,15 @@ stationComboboxes.forEach((combobox) => {
 const compareForm = document.querySelector("[data-compare-form]");
 
 function toggleSubmitButtons() {
+    const chartsForm = document.querySelector("[data-charts-form]");
+    if (chartsForm) {
+        const chartsButton = chartsForm.querySelector("[data-charts-submit]");
+        const stationId = chartsForm.querySelector("[data-station-id]");
+        if (chartsButton && stationId) {
+            chartsButton.disabled = !stationId.value;
+        }
+    }
+
     if (!compareForm) {
         return;
     }

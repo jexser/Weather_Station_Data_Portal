@@ -111,6 +111,21 @@ def compare_ui():
     return render_template("compare.html", records=())
 
 
+@ui_bp.route("/charts")
+def charts_ui():
+    station_name = request.args.get("station_name", "")
+    station_id = request.args.get("station_id", "")
+    chart_type = request.args.get("chart_type", "yearly_trend")
+    date = request.args.get("date", "")
+    return render_template(
+        "charts.html",
+        station_name=station_name,
+        station_id=station_id,
+        chart_type=chart_type,
+        date=date,
+    )
+
+
 @ui_bp.route("/error")
 def internal_error_ui():
     return render_template("error.html")

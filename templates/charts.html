@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Charts — Weather Station Data Portal{% endblock %}
+
+{% block content %}
+    <h1>Charts</h1>
+    <form method="get" action="{{ url_for('ui.charts_ui') }}" class="charts-form" data-charts-form>
+        <div class="charts-station-field combo-search" data-station-combobox>
+            <label for="station_name">Station</label>
+            <input type="text" id="station_name" name="station_name"
+                   placeholder="Search station..." data-station-input
+                   value="{{ station_name }}"/>
+            <input type="hidden" id="station_id" name="station_id"
+                   data-station-id value="{{ station_id }}">
+            <div class="combo-dropdown" data-station-results></div>
+        </div>
+        <div class="charts-options-row">
+            <div class="charts-type-field">
+                <label for="chart_type">Chart type</label>
+                <select id="chart_type" name="chart_type">
+                    <option value="yearly_trend" {% if chart_type == 'yearly_trend' %}selected{% endif %}>
+                        Yearly Trend
+                    </option>
+                    <option value="same_date" {% if chart_type == 'same_date' %}selected{% endif %}>
+                        Same Date Across Years
+                    </option>
+                </select>
+            </div>
+            <div class="charts-date-field">
+                <label for="date">Date <span class="label-hint">(mm-dd, for Same Date)</span></label>
+                <input type="text" id="date" name="date"
+                       placeholder="e.g. 02-27" value="{{ date }}"/>
+            </div>
+            <div class="charts-submit-wrap">
+                <input type="submit" value="Load chart" disabled data-charts-submit/>
+            </div>
+        </div>
+    </form>
+    <hr>
+    <div class="chart-area">
+        <p class="chart-placeholder">Select a station and chart type, then click Load chart.</p>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='scripts/combo-search.js') }}" defer></script>
+{% endblock %}
