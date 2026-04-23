@@ -4,10 +4,10 @@
 {% block title %}Weather Station Data Portal{% endblock %}
 
 {% block content %}
-    <h2>Find station id</h2>
+    <h1>Stations</h1>
     <form method="get" action="{{ url_for('ui.home_ui') }}">
-        <label for="station_name">Station name: </label>
-        <input type="text" id="station_name" name="station_name">
+        <label for="station_name">Filter by name: </label>
+        <input type="text" id="station_name" name="station_name" placeholder="Station name...">
         <input type="submit" id="search_button" value="Search">
     </form>
     <hr>

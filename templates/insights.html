@@ -23,12 +23,7 @@
     </form>
     <hr>
     {% if station_name %}
-    <h2>
-        Insights for {{ station_name }}
-        {% if date %}
-        on {{ date }}
-        {% endif %}
-    </h2>
+    <h2>Insights for {{ station_name }}{% if date %} on {{ date }}{% endif %}</h2>
     <table class="data-table">
         <thead>
             <tr>
@@ -38,42 +33,42 @@
         </thead>
         <tbody>
             <tr>
-                <td>Hottest year: </td>
+                <td>Hottest year</td>
                 <td>{{ hottest_year }} @ {{ hottest_year_temp }} °C</td>
             </tr>
             <tr>
-                <td>Coldest year: </td>
+                <td>Coldest year</td>
                 <td>{{ coldest_year }} @ {{ coldest_year_temp }} °C</td>
             </tr>
             <tr>
-                <td>Hottest day: </td>
+                <td>Hottest day</td>
                 <td>{{ hottest_day }} @ {{ hottest_day_temp }} °C</td>
             </tr>
             <tr>
-                <td>Coldest day: </td>
+                <td>Coldest day</td>
                 <td>{{ coldest_day }} @ {{ coldest_day_temp }} °C</td>
             </tr>
             {% if date %}
             <tr>
-                <td>Average temp: </td>
+                <td>Average temp</td>
                 <td>{{ avg_temp }} °C</td>
             </tr>
             <tr>
-                <td>Temperature variability: </td>
+                <td>Temperature variability</td>
                 <td>±{{ std_temp }} °C</td>
             </tr>
             {% else %}
-            <tr>
-                <td style="color: gray;">Average temp: </td>
-                <td style="color: gray;"> - </td>
+            <tr class="muted">
+                <td>Average temp</td>
+                <td>—</td>
             </tr>
-            <tr>
-                <td style="color: gray;">Temperature variability: </td>
-                <td style="color: gray;"> - </td>
+            <tr class="muted">
+                <td>Temperature variability</td>
+                <td>—</td>
             </tr>
             {% endif %}
             <tr>
-                <td>Missing records: </td>
+                <td>Missing records</td>
                 <td>{{ missing_records }}</td>
             </tr>
         </tbody>
