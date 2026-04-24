@@ -38,10 +38,13 @@
     </form>
     <hr>
     <div class="chart-area">
-        <p class="chart-placeholder">Select a station and chart type, then click Load chart.</p>
+        <p class="chart-placeholder" id="chart-placeholder">Select a station and chart type, then click Load chart.</p>
+        <canvas id="chart-canvas" style="display:none;"></canvas>
     </div>
 {% endblock %}
 
 {% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <script src="{{ url_for('static', filename='scripts/combo-search.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='scripts/charts.js') }}" defer></script>
 {% endblock %}
