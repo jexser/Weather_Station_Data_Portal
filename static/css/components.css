@@ -187,6 +187,28 @@ input[type="submit"]:disabled {
     cursor: not-allowed;
 }
 
+select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 0.875rem;
+    color: #2d2d2d;
+    background-color: #ffffff;
+    outline: none;
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: #aaff00;
+    box-shadow: 0 0 0 2px rgba(170, 255, 0, 0.25);
+}
+
+input[type="text"]:disabled {
+    background-color: #f2f2f2;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
 /* === Pagination === */
 .pagination {
     display: flex;
@@ -437,9 +459,15 @@ tr.muted td {
     border: 1px solid #e4e4e4;
     border-radius: 4px;
     min-height: 400px;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.chart-area.has-chart {
+    display: block;
+    padding: 16px 8px 8px;
 }
 
 .chart-placeholder {
@@ -447,6 +475,17 @@ tr.muted td {
     font-size: 0.9rem;
     font-style: italic;
     margin: 0;
+}
+
+.charts-date-field.disabled label {
+    color: #aaa;
+}
+
+.chart-error {
+    color: #c0392b;
+    font-size: 0.85rem;
+    margin: 8px 0 0;
+    font-weight: 600;
 }
 
 @media (max-width: 720px) {
