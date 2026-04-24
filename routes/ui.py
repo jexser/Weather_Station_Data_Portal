@@ -126,6 +126,11 @@ def charts_ui():
     )
 
 
+@ui_bp.route("/api")
+def api_docs_ui():
+    return render_template("api.html")
+
+
 @ui_bp.route("/error")
 def internal_error_ui():
     return render_template("error.html")

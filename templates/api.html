@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}API Documentation — Weather Station Data Portal{% endblock %}
+
+{% block content %}
+<h1>API Documentation</h1>
+<p class="api-intro">All endpoints return JSON. Base path: <code class="inline-code">/api/v1</code>. No authentication required.</p>
+
+<hr>
+
+<section class="api-section">
+    <h2>Response Envelope</h2>
+    <p class="api-desc">Every response wraps its payload in a top-level key.</p>
+
+    <div class="api-envelope-grid">
+        <div>
+            <p class="api-label">Success</p>
+            <pre class="code-block">{
+  "data": { ... } | [ ... ],
+  "items": &lt;int&gt;         // count, present on list responses
+}</pre>
+        </div>
+        <div>
+            <p class="api-label">Error</p>
+            <pre class="code-block">{
+  "error": {
+    "status_code": 400,
+    "message": "Human-readable description."
+  }
+}</pre>
+        </div>
+    </div>
+</section>
+
+<hr>
+
+<section class="api-section">
+    <h2>Stations</h2>
+
+    <div class="api-endpoint">
+        <div class="api-endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/v1/stations</span>
+        </div>
+        <p class="api-desc">Returns a paginated list of all weather stations.</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>Parameter</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>page</code></td><td>query</td><td>integer</td><td>No</td><td>Page number (default: 1). Returns <code>{"data": []}</code> if beyond last page.</td></tr>
+            </tbody>
+        </table>
+        <p class="api-label">Example request</p>
+        <pre class="code-block">GET /api/v1/stations?page=2</pre>
+        <p class="api-label">Success response <span class="status-code">200</span></p>
+        <pre class="code-block">{
+  "data": [
+    { "STAID": "000001", "STANAME": "VILNIUS" },
+    { "STAID": "000002", "STANAME": "TALLINN" }
+  ],
+  "items": 97,
+  "page": 2,
+  "page_size": 20,
+  "total_pages": 5,
+  "has_next": true
+}</pre>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="api-endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/v1/stations/search</span>
+        </div>
+        <p class="api-desc">Returns up to 50 stations whose names contain the query string (case-insensitive).</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>Parameter</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>name</code></td><td>query</td><td>string</td><td>Yes</td><td>Partial name to search for. Returns 400 if missing or empty.</td></tr>
+            </tbody>
+        </table>
+        <p class="api-label">Example request</p>
+        <pre class="code-block">GET /api/v1/stations/search?name=vil</pre>
+        <p class="api-label">Success response <span class="status-code">200</span></p>
+        <pre class="code-block">{
+  "data": [
+    { "STAID": "000001", "STANAME": "VILNIUS" }
+  ],
+  "search_query": "vil",
+  "items": 1
+}</pre>
+        <p class="api-label">Error response <span class="status-code status-error">400</span></p>
+        <pre class="code-block">{ "error": { "status_code": 400, "message": "No value for param 'name' is provided" } }</pre>
+    </div>
+</section>
+
+<hr>
+
+<section class="api-section">
+    <h2>Station Temperature Data</h2>
+
+    <div class="api-endpoint">
+        <div class="api-endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/v1/station/{id}?date=YYYY-MM-DD</span>
+        </div>
+        <p class="api-desc">Returns the recorded temperature for a single date at the given station. Provide exactly one of <code>date</code> or <code>year</code>.</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>Parameter</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>path</td><td>integer</td><td>Yes</td><td>Numeric station ID (e.g. <code>1</code>, <code>199</code>).</td></tr>
+                <tr><td><code>date</code></td><td>query</td><td>string</td><td>Yes*</td><td>Date in <code>YYYY-MM-DD</code> format. Mutually exclusive with <code>year</code>.</td></tr>
+            </tbody>
+        </table>
+        <p class="api-label">Example request</p>
+        <pre class="code-block">GET /api/v1/station/1?date=2003-08-12</pre>
+        <p class="api-label">Success response <span class="status-code">200</span></p>
+        <pre class="code-block">{
+  "data": {
+    "stationid": "000001",
+    "date": "2003-08-12",
+    "temperature": 38.2
+  },
+  "items": 1
+}</pre>
+        <p class="api-label">Error responses</p>
+        <pre class="code-block">// 400 — invalid date format
+{ "error": { "status_code": 400, "message": "Invalid date format. Expected YYYY-MM-DD." } }
+
+// 400 — both date and year supplied
+{ "error": { "status_code": 400, "message": "Conflicting parameters: provide either 'date' or 'year', not both." } }
+
+// 404 — station file not found or no record for date
+{ "error": { "status_code": 404, "message": "Station not found." } }</pre>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="api-endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/v1/station/{id}?year=YYYY</span>
+        </div>
+        <p class="api-desc">Returns all daily temperature records for a station for a given year. Missing values (<code>-9999</code>) are returned as <code>null</code>.</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>Parameter</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>path</td><td>integer</td><td>Yes</td><td>Numeric station ID.</td></tr>
+                <tr><td><code>year</code></td><td>query</td><td>integer</td><td>Yes*</td><td>Four-digit year (e.g. <code>2003</code>). Mutually exclusive with <code>date</code>.</td></tr>
+            </tbody>
+        </table>
+        <p class="api-label">Example request</p>
+        <pre class="code-block">GET /api/v1/station/1?year=2003</pre>
+        <p class="api-label">Success response <span class="status-code">200</span></p>
+        <pre class="code-block">{
+  "data": [
+    { "date": "2003-01-01", "temperature": -3.1 },
+    { "date": "2003-01-02", "temperature": null },
+    { "date": "2003-12-31", "temperature": 1.4 }
+  ],
+  "items": 365
+}</pre>
+        <p class="api-label">Error responses</p>
+        <pre class="code-block">// 400 — invalid year value
+{ "error": { "status_code": 400, "message": "Invalid year." } }
+
+// 404 — station file not found
+{ "error": { "status_code": 404, "message": "Station not found." } }</pre>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="api-endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/v1/station/{id}/yearly</span>
+        </div>
+        <p class="api-desc">Returns one mean temperature value per year for the station, aggregated from all valid daily records. Years with no valid data are omitted.</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>Parameter</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>path</td><td>integer</td><td>Yes</td><td>Numeric station ID.</td></tr>
+            </tbody>
+        </table>
+        <p class="api-label">Example request</p>
+        <pre class="code-block">GET /api/v1/station/1/yearly</pre>
+        <p class="api-label">Success response <span class="status-code">200</span></p>
+        <pre class="code-block">{
+  "data": [
+    { "year": 1960, "temperature": 6.1 },
+    { "year": 1961, "temperature": 5.8 }
+  ],
+  "items": 62,
+  "stationid": "000001"
+}</pre>
+        <p class="api-label">Error response <span class="status-code status-error">404</span></p>
+        <pre class="code-block">{ "error": { "status_code": 404, "message": "Station not found." } }</pre>
+    </div>
+
+    <div class="api-endpoint">
+        <div class="api-endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/v1/station/{id}/date/{mm_dd}</span>
+        </div>
+        <p class="api-desc">Returns the temperature recorded on a specific calendar date (<code>MM-DD</code>) across all available years.</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>Parameter</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>path</td><td>integer</td><td>Yes</td><td>Numeric station ID.</td></tr>
+                <tr><td><code>mm_dd</code></td><td>path</td><td>string</td><td>Yes</td><td>Calendar date in <code>MM-DD</code> format (e.g. <code>07-15</code>).</td></tr>
+            </tbody>
+        </table>
+        <p class="api-label">Example request</p>
+        <pre class="code-block">GET /api/v1/station/1/date/07-15</pre>
+        <p class="api-label">Success response <span class="status-code">200</span></p>
+        <pre class="code-block">{
+  "data": [
+    { "date": "2000-07-15", "temperature": 24.3 },
+    { "date": "2001-07-15", "temperature": 21.7 }
+  ],
+  "items": 60,
+  "stationid": "000001",
+  "mm_dd": "07-15"
+}</pre>
+    </div>
+</section>
+
+<hr>
+
+<section class="api-section">
+    <h2>Insights</h2>
+
+    <div class="api-endpoint">
+        <div class="api-endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/v1/insights/{id}?type=&lt;type&gt;</span>
+        </div>
+        <p class="api-desc">Returns a statistical insight for the given station. The <code>date</code> parameter is required only for date-dependent insight types.</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>Parameter</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>id</code></td><td>path</td><td>integer</td><td>Yes</td><td>Numeric station ID.</td></tr>
+                <tr><td><code>type</code></td><td>query</td><td>string</td><td>Yes</td><td>Insight type — see table below.</td></tr>
+                <tr><td><code>date</code></td><td>query</td><td>string</td><td>Conditional</td><td>Calendar date in <code>MM-DD</code> format. Required for <code>avg_for_date</code> and <code>temp_variability</code>.</td></tr>
+            </tbody>
+        </table>
+
+        <p class="api-label">Insight types</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>type value</th><th>date required</th><th>Response data shape</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>hottest_year</code></td><td>No</td><td><code>{"year": int, "value": float}</code></td><td>Year with highest mean daily temperature and its value.</td></tr>
+                <tr><td><code>coldest_year</code></td><td>No</td><td><code>{"year": int, "value": float}</code></td><td>Year with lowest mean daily temperature and its value.</td></tr>
+                <tr><td><code>hottest_day</code></td><td>No</td><td><code>{"date": "YYYY-MM-DD", "value": float}</code></td><td>Single hottest recorded date and temperature in °C.</td></tr>
+                <tr><td><code>coldest_day</code></td><td>No</td><td><code>{"date": "YYYY-MM-DD", "value": float}</code></td><td>Single coldest recorded date and temperature in °C.</td></tr>
+                <tr><td><code>avg_for_date</code></td><td>Yes (MM-DD)</td><td><code>{"avg_temp": float}</code></td><td>Mean temperature across all years for that calendar date, rounded to 1 d.p.</td></tr>
+                <tr><td><code>temp_variability</code></td><td>Yes (MM-DD)</td><td><code>{"std_dev": float}</code></td><td>Standard deviation of temperature across all years for that calendar date, rounded to 1 d.p.</td></tr>
+                <tr><td><code>missing_data_count</code></td><td>No</td><td><code>{"missing_count": int}</code></td><td>Count of missing (<code>-9999</code>) temperature records in the station file.</td></tr>
+            </tbody>
+        </table>
+
+        <p class="api-label">Example requests</p>
+        <pre class="code-block">GET /api/v1/insights/1?type=hottest_year
+GET /api/v1/insights/1?type=avg_for_date&date=07-15</pre>
+        <p class="api-label">Success responses <span class="status-code">200</span></p>
+        <pre class="code-block">// hottest_year / coldest_year
+{ "data": { "year": 2003, "value": 12.4 } }
+
+// hottest_day / coldest_day
+{ "data": { "date": "2003-08-12", "value": 38.2 } }
+
+// avg_for_date
+{ "data": { "avg_temp": 22.4 } }
+
+// temp_variability
+{ "data": { "std_dev": 3.1 } }
+
+// missing_data_count
+{ "data": { "missing_count": 42 } }</pre>
+        <p class="api-label">Error responses</p>
+        <pre class="code-block">// 400 — unsupported type
+{ "error": { "status_code": 400, "message": "Invalid insight type." } }
+
+// 400 — date missing for date-dependent insight
+{ "error": { "status_code": 400, "message": "Parameter 'date' (MM-DD) is required for this insight type." } }
+
+// 404 — station not found
+{ "error": { "status_code": 404, "message": "Station not found." } }</pre>
+    </div>
+</section>
+
+<hr>
+
+<section class="api-section">
+    <h2>Compare</h2>
+
+    <div class="api-endpoint">
+        <div class="api-endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/api/v1/compare</span>
+        </div>
+        <p class="api-desc">Returns a full-year union of daily temperatures for two stations side by side. Every calendar day in the requested year is present; missing values are <code>null</code>.</p>
+        <table class="api-doc-table">
+            <thead>
+                <tr><th>Parameter</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>stationA_id</code></td><td>query</td><td>integer</td><td>Yes</td><td>Numeric station ID for Station A.</td></tr>
+                <tr><td><code>stationB_id</code></td><td>query</td><td>integer</td><td>Yes</td><td>Numeric station ID for Station B.</td></tr>
+                <tr><td><code>year</code></td><td>query</td><td>integer</td><td>Yes</td><td>Four-digit year to compare (e.g. <code>2003</code>).</td></tr>
+            </tbody>
+        </table>
+        <p class="api-label">Example request</p>
+        <pre class="code-block">GET /api/v1/compare?stationA_id=1&stationB_id=2&year=2003</pre>
+        <p class="api-label">Success response <span class="status-code">200</span></p>
+        <pre class="code-block">{
+  "data": [
+    { "date": "2003-01-01", "stationA": -3.1, "stationB": -1.8 },
+    { "date": "2003-01-02", "stationA": null, "stationB": -0.4 },
+    { "date": "2003-12-31", "stationA": 1.4,  "stationB": null  }
+  ],
+  "items": 365,
+  "stationA_id": "000001",
+  "stationB_id": "000002",
+  "year": "2003"
+}</pre>
+        <p class="api-label">Error responses</p>
+        <pre class="code-block">// 400 — missing required parameter
+{ "error": { "status_code": 400, "message": "Parameter 'stationA_id' is required." } }
+
+// 400 — invalid year or non-numeric station ID
+{ "error": { "status_code": 400, "message": "Invalid year." } }
+
+// 404 — station file not found
+{ "error": { "status_code": 404, "message": "Station not found." } }</pre>
+    </div>
+</section>
+{% endblock %}
