@@ -18,6 +18,7 @@ LOG_FILE_LOCATION: Final[str] = os.path.join("logs", "app_logs.log")
 
 # Logs
 LOG_LEVEL = logging.DEBUG if DEBUG else logging.INFO
+os.makedirs(os.path.dirname(LOG_FILE_LOCATION), exist_ok=True)
 handler = RotatingFileHandler(
     LOG_FILE_LOCATION,
     maxBytes=1_048_576,  # 1 MiB
