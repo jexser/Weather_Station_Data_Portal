@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Insights — Weather Station Data Portal{% endblock %}
+{% block title %}Insights - Weather Station Data Portal{% endblock %}
 
 {% block content %}
     <h1>Insights</h1>
-    <form method="get" action="{{ url_for('ui.insights_ui') }}" class="insights-form">
+    <form method="get" action="{{ url_for('ui.insights_ui') }}" class="insights-form" data-insights-form>
         <div class="insights-form-grid">
             <div class="combo-search insights-station-search" data-station-combobox>
                 <label for="station_name">Station</label>
@@ -20,62 +20,54 @@
                 <input type="submit" id="load_insights" value="Load insights"/>
             </div>
         </div>
+        <p class="inline-error" data-inline-error hidden></p>
     </form>
     <hr>
-    {% if station_name %}
-    <h2>Insights for {{ station_name }}{% if date %} on {{ date }}{% endif %}</h2>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Insight</th>
-                <th>Value</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Hottest year</td>
-                <td>{{ hottest_year }} @ {{ hottest_year_temp }} °C</td>
-            </tr>
-            <tr>
-                <td>Coldest year</td>
-                <td>{{ coldest_year }} @ {{ coldest_year_temp }} °C</td>
-            </tr>
-            <tr>
-                <td>Hottest day</td>
-                <td>{{ hottest_day }} @ {{ hottest_day_temp }} °C</td>
-            </tr>
-            <tr>
-                <td>Coldest day</td>
-                <td>{{ coldest_day }} @ {{ coldest_day_temp }} °C</td>
-            </tr>
-            {% if date %}
-            <tr>
-                <td>Average temp</td>
-                <td>{{ avg_temp }} °C</td>
-            </tr>
-            <tr>
-                <td>Temperature variability</td>
-                <td>±{{ std_temp }} °C</td>
-            </tr>
-            {% else %}
-            <tr class="muted">
-                <td>Average temp</td>
-                <td>—</td>
-            </tr>
-            <tr class="muted">
-                <td>Temperature variability</td>
-                <td>—</td>
-            </tr>
-            {% endif %}
-            <tr>
-                <td>Missing records</td>
-                <td>{{ missing_records }}</td>
-            </tr>
-        </tbody>
-    </table>
-    {% endif %}
+    <section data-insights-results {% if not station_name %}hidden{% endif %}>
+        <h2 data-insights-heading>Insights for {{ station_name or "" }}{% if date %} on {{ date }}{% endif %}</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Insight</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Hottest year</td>
+                    <td data-insight-value="hottest_year">{% if station_name %}{{ hottest_year }} @ {{ hottest_year_temp }} C{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>Coldest year</td>
+                    <td data-insight-value="coldest_year">{% if station_name %}{{ coldest_year }} @ {{ coldest_year_temp }} C{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>Hottest day</td>
+                    <td data-insight-value="hottest_day">{% if station_name %}{{ hottest_day }} @ {{ hottest_day_temp }} C{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>Coldest day</td>
+                    <td data-insight-value="coldest_day">{% if station_name %}{{ coldest_day }} @ {{ coldest_day_temp }} C{% endif %}</td>
+                </tr>
+                <tr data-insight-row="avg_for_date" {% if not date %}class="muted" title="Provide a date (MM-DD) to get this insight."{% endif %}>
+                    <td>Average temp</td>
+                    <td data-insight-value="avg_for_date">{% if date %}{{ avg_temp }} C{% else %}-{% endif %}</td>
+                </tr>
+                <tr data-insight-row="temp_variability" {% if not date %}class="muted" title="Provide a date (MM-DD) to get this insight."{% endif %}>
+                    <td>Temperature variability</td>
+                    <td data-insight-value="temp_variability">{% if date %}+/-{{ std_temp }} C{% else %}-{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>Missing records</td>
+                    <td data-insight-value="missing_data_count">{% if station_name %}{{ missing_records }}{% endif %}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 {% endblock %}
 
 {% block scripts %}
+    <script src="{{ url_for('static', filename='scripts/api-client.js') }}" defer></script>
     <script src="{{ url_for('static', filename='scripts/combo-search.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='scripts/insights.js') }}" defer></script>
 {% endblock %}

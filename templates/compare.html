@@ -24,9 +24,10 @@
             </div>
         </div>
         <input type="submit" value="Compare" data-compare-submit />
+        <p class="inline-error" data-inline-error hidden></p>
     </form>
     <hr>
-    {% if records %}
+    <section data-compare-results {% if not records %}hidden{% endif %}>
         <h2>{{ station_a_name }} vs {{ station_b_name }} in {{ year }}</h2>
         <div class="table-scroll">
             <table class="data-table compare-table">
@@ -48,9 +49,11 @@
                 </tbody>
             </table>
         </div>
-    {% endif %}
+    </section>
 {% endblock %}
 
 {% block scripts %}
+    <script src="{{ url_for('static', filename='scripts/api-client.js') }}" defer></script>
     <script src="{{ url_for('static', filename='scripts/combo-search.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='scripts/compare.js') }}" defer></script>
 {% endblock %}

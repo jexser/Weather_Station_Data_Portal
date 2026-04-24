@@ -1,89 +1,34 @@
-// ── Date field toggle ──────────────────────────────────────────────────────────
 const chartTypeSelect = document.getElementById("chart_type");
 const dateFieldWrap = document.querySelector(".charts-date-field");
 const dateInput = document.getElementById("date");
-
-function syncDateField() {
-    const isYearlyTrend = chartTypeSelect.value === "yearly_trend";
-    dateInput.disabled = isYearlyTrend;
-    dateFieldWrap.classList.toggle("disabled", isYearlyTrend);
-    if (isYearlyTrend) {
-        dateInput.value = "";
-    }
-}
-
-chartTypeSelect.addEventListener("change", syncDateField);
-syncDateField();
-
-// ── Form submit ───────────────────────────────────────────────────────────────
 const form = document.querySelector("[data-charts-form]");
 const submitBtn = form.querySelector("[data-charts-submit]");
 const chartArea = document.querySelector(".chart-area");
 const placeholder = document.getElementById("chart-placeholder");
 const canvas = document.getElementById("chart-canvas");
+const inlineError = form.querySelector("[data-inline-error]");
 let chartInstance = null;
 
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    clearError();
+function syncDateField() {
+    const isYearlyTrend = chartTypeSelect.value === "yearly_trend";
+    dateInput.disabled = isYearlyTrend;
+    dateFieldWrap.classList.toggle("disabled", isYearlyTrend);
 
-    const stationId = form.querySelector("[data-station-id]").value;
-    const chartType = chartTypeSelect.value;
-    const date = dateInput.value.trim();
-
-    if (chartType === "same_date" && !date) {
-        showError("Please enter a date (MM-DD)");
-        return;
+    if (isYearlyTrend) {
+        dateInput.value = "";
     }
-
-    submitBtn.disabled = true;
-    submitBtn.value = "Loading...";
-
-    try {
-        const { labels, values, title } = await fetchChartData(stationId, chartType, date);
-        if (labels.length === 0) {
-            showError("No data available for the selected parameters.");
-            return;
-        }
-        renderChart(labels, values, title);
-    } catch (err) {
-        showError(err.message);
-    } finally {
-        submitBtn.value = "Load chart";
-        submitBtn.disabled = !form.querySelector("[data-station-id]").value;
-    }
-});
-
-// ── Data fetching ─────────────────────────────────────────────────────────────
-async function fetchChartData(stationId, chartType, date) {
-    if (chartType === "yearly_trend") {
-        const resp = await fetch(`/api/v1/station/${stationId}/yearly`);
-        if (!resp.ok) {
-            const body = await resp.json().catch(() => ({}));
-            throw new Error(body.error?.message ?? "Failed to load data");
-        }
-        const json = await resp.json();
-        return {
-            labels: json.data.map((r) => String(r.year)),
-            values: json.data.map((r) => r.temperature),
-            title: "Annual Mean Temperature",
-        };
-    }
-
-    const resp = await fetch(`/api/v1/station/${stationId}/date/${encodeURIComponent(date)}`);
-    if (!resp.ok) {
-        const body = await resp.json().catch(() => ({}));
-        throw new Error(body.error?.message ?? "Failed to load data");
-    }
-    const json = await resp.json();
-    return {
-        labels: json.data.map((r) => r.date.slice(0, 4)),
-        values: json.data.map((r) => r.temperature),
-        title: `Temperature on ${date} by Year`,
-    };
 }
 
-// ── Chart rendering ───────────────────────────────────────────────────────────
+function showError(message) {
+    inlineError.textContent = message;
+    inlineError.hidden = false;
+}
+
+function clearError() {
+    inlineError.hidden = true;
+    inlineError.textContent = "";
+}
+
 function renderChart(labels, values, title) {
     placeholder.style.display = "none";
     canvas.style.display = "block";
@@ -132,11 +77,11 @@ function renderChart(labels, values, title) {
                     grid: { color: "#e4e4e4" },
                     ticks: {
                         color: "#666",
-                        callback: (v) => `${v} °C`,
+                        callback: (value) => `${value} C`,
                     },
                     title: {
                         display: true,
-                        text: "Temperature (°C)",
+                        text: "Temperature (C)",
                         color: "#888",
                         font: { size: 11 },
                     },
@@ -146,18 +91,66 @@ function renderChart(labels, values, title) {
     });
 }
 
-// ── Inline error helpers ──────────────────────────────────────────────────────
-function showError(msg) {
-    let el = document.getElementById("chart-error");
-    if (!el) {
-        el = document.createElement("p");
-        el.id = "chart-error";
-        el.className = "chart-error";
-        form.insertAdjacentElement("afterend", el);
+async function fetchChartData(stationId, chartType, date) {
+    if (chartType === "yearly_trend") {
+        const json = await window.apiClient.fetchJsonOrThrow(
+            `/api/v1/station/${stationId}/yearly`,
+            { notFoundMessage: "No data found for the selected station / date." }
+        );
+
+        return {
+            labels: json.data.map((record) => String(record.year)),
+            values: json.data.map((record) => record.temperature),
+            title: "Annual Mean Temperature",
+        };
     }
-    el.textContent = msg;
+
+    const json = await window.apiClient.fetchJsonOrThrow(
+        `/api/v1/station/${stationId}/date/${encodeURIComponent(date)}`,
+        { notFoundMessage: "No data found for the selected station / date." }
+    );
+
+    return {
+        labels: json.data.map((record) => record.date.slice(0, 4)),
+        values: json.data.map((record) => record.temperature),
+        title: `Temperature on ${date} by Year`,
+    };
 }
 
-function clearError() {
-    document.getElementById("chart-error")?.remove();
-}
+chartTypeSelect.addEventListener("change", syncDateField);
+syncDateField();
+
+form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearError();
+
+    const stationId = form.querySelector("[data-station-id]").value;
+    const chartType = chartTypeSelect.value;
+    const date = dateInput.value.trim();
+
+    if (chartType === "same_date" && !date) {
+        showError("Please enter a date (MM-DD)");
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.value = "Loading...";
+
+    try {
+        const { labels, values, title } = await fetchChartData(stationId, chartType, date);
+
+        if (labels.length === 0) {
+            showError("No data found for the selected station / date.");
+            return;
+        }
+
+        renderChart(labels, values, title);
+    } catch (error) {
+        if (error.message !== "Redirecting to error page.") {
+            showError(error.message);
+        }
+    } finally {
+        submitBtn.value = "Load chart";
+        submitBtn.disabled = !form.querySelector("[data-station-id]").value;
+    }
+});
