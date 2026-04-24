@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 import services.station_service as station_service
 from errors import BadRequest
-from models import DailyTemperatureRecord, StationComparisonRecord, StationRecord, StationYearlyResult
+from models import DailyTemperatureRecord, StationComparisonRecord, StationRecord, StationYearlyResult, YearlyTemperatureRecord
 
 api_bp = Blueprint("api", __name__)
 
@@ -16,6 +16,13 @@ def _serialize_station(station: StationRecord) -> dict:
 def _serialize_daily_temperature(record: DailyTemperatureRecord) -> dict:
     return {
         "date": record.date,
+        "temperature": record.temperature,
+    }
+
+
+def _serialize_yearly_average(record: YearlyTemperatureRecord) -> dict:
+    return {
+        "year": record.year,
         "temperature": record.temperature,
     }
 
@@ -64,6 +71,27 @@ def get_station_by_id_api(stationid: str):
     return jsonify({
         "data": data,
         "items": items
+    })
+
+
+@api_bp.route("/api/v1/station/<stationid>/yearly")
+def get_station_yearly_averages_api(stationid: str):
+    result = station_service.get_station_yearly_averages(stationid)
+    return jsonify({
+        "data": [_serialize_yearly_average(r) for r in result.records],
+        "items": len(result.records),
+        "stationid": result.station_id,
+    })
+
+
+@api_bp.route("/api/v1/station/<stationid>/date/<mm_dd>")
+def get_station_date_across_years_api(stationid: str, mm_dd: str):
+    result = station_service.get_station_temperature_for_date(stationid, mm_dd)
+    return jsonify({
+        "data": [_serialize_daily_temperature(r) for r in result.records],
+        "items": len(result.records),
+        "stationid": result.station_id,
+        "mm_dd": result.mm_dd,
     })
 
 

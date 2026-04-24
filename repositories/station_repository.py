@@ -9,7 +9,7 @@ import pandas as pd
 import constants
 import validators
 from errors import InternalServerError, NotFound
-from models import DailyTemperatureRecord, StationRecord
+from models import DailyTemperatureRecord, StationRecord, YearlyTemperatureRecord
 
 
 @lru_cache(maxsize=128)
@@ -108,6 +108,41 @@ def extract_temperature_series(stationid: str, year_str: str) -> list[DailyTempe
             temperature=None if pd.isna(row[constants.FIELD_TG]) else float(row[constants.FIELD_TG]),
         )
         for _, row in yearly_df.iterrows()
+    ]
+
+
+def extract_yearly_averages(stationid: str) -> list[YearlyTemperatureRecord]:
+    """
+    Returns mean annual temperature for each year that has at least one valid reading.
+    NA values are excluded before aggregation; years with no valid data are omitted.
+    """
+    df = _load_station(stationid)
+    valid_df = df.dropna(subset=[constants.FIELD_TG])
+    yearly = valid_df.groupby(valid_df[constants.FIELD_DATE].dt.year)[constants.FIELD_TG].mean()
+    return [
+        YearlyTemperatureRecord(year=int(year), temperature=round(float(temp), 1))
+        for year, temp in yearly.items()
+    ]
+
+
+def extract_temperature_series_for_date(stationid: str, mm_dd: str) -> list[DailyTemperatureRecord]:
+    """
+    Returns the temperature recorded on a specific MM-DD across all available years.
+    NA values are excluded. Records are sorted chronologically.
+    """
+    df = _load_station(stationid)
+    month_str, day_str = mm_dd.split("-")
+    mask = (
+        (df[constants.FIELD_DATE].dt.month == int(month_str)) &
+        (df[constants.FIELD_DATE].dt.day == int(day_str))
+    )
+    filtered = df.loc[mask].dropna(subset=[constants.FIELD_TG])
+    return [
+        DailyTemperatureRecord(
+            date=row[constants.FIELD_DATE].strftime("%Y-%m-%d"),
+            temperature=round(float(row[constants.FIELD_TG]), 1),
+        )
+        for _, row in filtered.iterrows()
     ]
 
 

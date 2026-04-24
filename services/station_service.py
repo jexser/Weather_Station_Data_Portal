@@ -9,8 +9,10 @@ from models import (
     PaginatedStations,
     StationComparisonRecord,
     StationComparisonResult,
+    StationDateAcrossYearsResult,
     StationSearchResult,
     StationTemperatureResult,
+    StationYearlyAveragesResult,
     StationYearlyResult,
 )
 import services.handlers as handlers
@@ -98,6 +100,26 @@ def get_station_data_by_date_or_year(
         )
 
     raise errors.BadRequest("Either date or year must be provided")
+
+
+def get_station_yearly_averages(stationid: str) -> StationYearlyAveragesResult:
+    validators.validate_station_id(stationid)
+    records = station_repository.extract_yearly_averages(stationid)
+    return StationYearlyAveragesResult(
+        station_id=stationid,
+        records=tuple(records),
+    )
+
+
+def get_station_temperature_for_date(stationid: str, mm_dd: str) -> StationDateAcrossYearsResult:
+    validators.validate_station_id(stationid)
+    validators.validate_mm_dd_date_format(mm_dd)
+    records = station_repository.extract_temperature_series_for_date(stationid, mm_dd)
+    return StationDateAcrossYearsResult(
+        station_id=stationid,
+        mm_dd=mm_dd,
+        records=tuple(records),
+    )
 
 
 def _paginate_index(data: list, page: int, page_size: int = 500) -> list:

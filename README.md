@@ -57,6 +57,7 @@ Routes are organised as Flask Blueprints (`api_bp`, `ui_bp`) and registered in `
 
 ### Architecture Decisions
 
+- Layered architecture: routes → services → repositories
 - Pandas used only in repository layer
 - Caching per station for performance
 - Dispatcher pattern for insights endpoint
