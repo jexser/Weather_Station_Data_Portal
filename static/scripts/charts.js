@@ -29,6 +29,17 @@ function clearError() {
     inlineError.textContent = "";
 }
 
+function linearRegressionLine(values) {
+    const n = values.length;
+    const sumX = (n * (n - 1)) / 2;
+    const sumX2 = (n * (n - 1) * (2 * n - 1)) / 6;
+    const sumY = values.reduce((a, b) => a + b, 0);
+    const sumXY = values.reduce((sum, y, i) => sum + i * y, 0);
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+    return values.map((_, i) => Math.round((slope * i + intercept) * 100) / 100);
+}
+
 function renderChart(labels, values, title) {
     placeholder.style.display = "none";
     canvas.style.display = "block";
@@ -38,28 +49,48 @@ function renderChart(labels, values, title) {
         chartInstance.destroy();
     }
 
+    const trendValues = linearRegressionLine(values);
+
     chartInstance = new Chart(canvas.getContext("2d"), {
         type: "line",
         data: {
             labels,
-            datasets: [{
-                label: title,
-                data: values,
-                borderColor: "#1e2a3a",
-                backgroundColor: "rgba(170, 255, 0, 0.08)",
-                borderWidth: 2,
-                pointRadius: 3,
-                pointBackgroundColor: "#aaff00",
-                pointBorderColor: "#1e2a3a",
-                pointBorderWidth: 1,
-                tension: 0.2,
-                fill: true,
-            }],
+            datasets: [
+                {
+                    label: "Temperature",
+                    data: values,
+                    borderColor: "#1e2a3a",
+                    backgroundColor: "rgba(170, 255, 0, 0.08)",
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: "#aaff00",
+                    pointBorderColor: "#1e2a3a",
+                    pointBorderWidth: 1,
+                    tension: 0.2,
+                    fill: true,
+                    order: 2,
+                },
+                {
+                    label: "Trend",
+                    data: trendValues,
+                    borderColor: "rgba(0, 7, 215, 0.85)",
+                    backgroundColor: "transparent",
+                    borderWidth: 2,
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    tension: 0,
+                    fill: false,
+                    order: 1,
+                },
+            ],
         },
         options: {
             responsive: true,
             plugins: {
-                legend: { display: false },
+                legend: {
+                    display: true,
+                    labels: { color: "#1e2a3a", font: { size: 12 }, boxWidth: 20 },
+                },
                 title: {
                     display: true,
                     text: title,
@@ -81,7 +112,7 @@ function renderChart(labels, values, title) {
                     },
                     title: {
                         display: true,
-                        text: "Temperature (C)",
+                        text: "Temperature (°C)",
                         color: "#888",
                         font: { size: 11 },
                     },

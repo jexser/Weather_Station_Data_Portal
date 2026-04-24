@@ -13,12 +13,12 @@ if (insightsForm) {
     const DATE_PATTERN = /^\d{2}-\d{2}$/;
 
     const INSIGHT_CONFIG = [
-        { type: "hottest_year", formatter: (data) => `${data.year} @ ${data.value} C` },
-        { type: "coldest_year", formatter: (data) => `${data.year} @ ${data.value} C` },
-        { type: "hottest_day", formatter: (data) => `${data.date} @ ${data.value} C` },
-        { type: "coldest_day", formatter: (data) => `${data.date} @ ${data.value} C` },
-        { type: "avg_for_date", formatter: (data) => `${data.avg_temp} C`, dateDependent: true },
-        { type: "temp_variability", formatter: (data) => `+/-${data.std_dev} C`, dateDependent: true },
+        { type: "hottest_year", formatter: (data) => `${data.year} at ${data.value} °C` },
+        { type: "coldest_year", formatter: (data) => `${data.year} at ${data.value} °C` },
+        { type: "hottest_day", formatter: (data) => `${data.date} at ${data.value} °C` },
+        { type: "coldest_day", formatter: (data) => `${data.date} at ${data.value} °C` },
+        { type: "avg_for_date", formatter: (data) => `${data.avg_temp} °C`, dateDependent: true },
+        { type: "temp_variability", formatter: (data) => `+/-${data.std_dev} °C`, dateDependent: true },
         { type: "missing_data_count", formatter: (data) => String(data.missing_count) },
     ];
 

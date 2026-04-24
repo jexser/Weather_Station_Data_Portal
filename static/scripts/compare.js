@@ -28,7 +28,7 @@ if (compareClientForm) {
             return "NULL";
         }
 
-        return `${value.toFixed(1)} degC`;
+        return `${value.toFixed(1)} °C`;
     }
 
     function renderComparisonTable(records, stationAName, stationBName, year) {
