@@ -37,10 +37,12 @@ The project has two parts:
 │   ├── api.html                # Static API reference documentation
 │   ├── error.html              # 500 error page
 │   └── macros.html             # Shared Jinja2 macros (pagination)
+├── tests/                      # Pytest test suite
 ├── app.py                      # App init, logging, blueprint registration, entry point
 ├── constants.py                # Field names and config constants
 ├── errors.py                   # APIError hierarchy and JSON serializer
 ├── models.py                   # Frozen dataclasses for all service/repo return types
+├── pytest.toml                 # Pytest configuration
 ├── validators.py               # Input validation (raises 400/404 on failure)
 └── requirements.txt
 ```
@@ -258,10 +260,19 @@ python app.py
 
 Runs on `http://127.0.0.1:5000`.
 
+### Running Tests
+
+```bash
+pytest
+```
+
 ## Tech Stack
 
 - **Python 3.10+**
 - **Flask 3.x** — web framework and routing
 - **Pandas 3.x** — data loading and transformation
+- **NumPy 2.x** — numerical operations (std dev, aggregation)
 - **Jinja2** — HTML templating
-- **Vanilla JS** — station autocomplete (no frontend framework)
+- **Chart.js** — client-side temperature trend charts
+- **Vanilla JS** — station autocomplete widget (no frontend framework)
+- **pytest** — test suite
