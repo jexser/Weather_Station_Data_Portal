@@ -1,5 +1,7 @@
 __pycache__/
-logs/
+/logs/
+*.log
+logs/app_logs.log
 *.pyc
 *.env
 .vscode/
