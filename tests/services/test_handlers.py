@@ -28,7 +28,7 @@ def test_get_hottest_year_returns_year(monkeypatch):
 
     result = handlers._get_hottest_year("1", None)
 
-    assert result == {"data": {"year": 2021}}
+    assert result == {"data": {"year": 2021, "value": 12.5}}
 
 
 def test_get_coldest_year_returns_year(monkeypatch):
@@ -36,7 +36,7 @@ def test_get_coldest_year_returns_year(monkeypatch):
 
     result = handlers._get_coldest_year("1", None)
 
-    assert result == {"data": {"year": 2022}}
+    assert result == {"data": {"year": 2022, "value": -10.0}}
 
 
 def test_get_hottest_day_returns_date_and_temperature(monkeypatch):
@@ -44,7 +44,7 @@ def test_get_hottest_day_returns_date_and_temperature(monkeypatch):
 
     result = handlers._get_hottest_day("1", None)
 
-    assert result == {"data": {"date": "2021-07-11", "TG": 20.0}}
+    assert result == {"data": {"date": "2021-07-11", "value": 20.0}}
 
 
 def test_get_coldest_day_returns_date_and_temperature(monkeypatch):
@@ -52,7 +52,7 @@ def test_get_coldest_day_returns_date_and_temperature(monkeypatch):
 
     result = handlers._get_coldest_day("1", None)
 
-    assert result == {"data": {"date": "2022-12-31", "TG": -10.0}}
+    assert result == {"data": {"date": "2022-12-31", "value": -10.0}}
 
 
 def test_get_avg_for_date_returns_rounded_average(monkeypatch):
