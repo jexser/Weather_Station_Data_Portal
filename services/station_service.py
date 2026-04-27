@@ -62,12 +62,12 @@ def find_stations_by_name(station_name: str) -> StationSearchResult:
     validators.validate_station_name(station_name=station_name)
 
     search_results = station_repository.search_stations_by_name(station_name)
-    limited_results = search_results[: constants.SEARCH_RESULTS_LIMIT]
+    limited_results = search_results[: constants.API_SEARCH_RESULTS_LIMIT]
 
     return StationSearchResult(
         query=station_name,
         stations=tuple(limited_results),
-        limit=constants.SEARCH_RESULTS_LIMIT,
+        limit=constants.API_SEARCH_RESULTS_LIMIT,
     )
 
 
