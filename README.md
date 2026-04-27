@@ -250,9 +250,14 @@ Create a `.env` file in the project root:
 
 ```env
 Debug=True
+INDEX_PAGE_SIZE=20
+API_SEARCH_RESULTS_LIMIT=10
 ```
 
 `Debug=True` enables Flask hot-reload and DEBUG-level logging. Omit or set to `False` for production.
+`INDEX_PAGE_SIZE` defines how many station IDs are displayed per page on the home page. Default value is 20 in case of missing value or .env file.
+`API_SEARCH_RESULTS_LIMIT` defines how many API search results are returned per request. Default value is 10 in case of missing value or .env file.
+
 
 ### Running
 
